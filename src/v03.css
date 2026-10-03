@@ -1,0 +1,62 @@
+.v03 .ms-brief{background:#fff; border:1px solid #9a9a9a; padding:10px 14px 12px; margin:6px 0 12px;
+    font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#000; line-height:1.3;}
+.v03 .ms-brief.ms-fail{background:#dbe6f5;}
+.v03 .ms-brief sub, .v03 .ms-brief sup{font-size:9px; line-height:0;}
+.v03 .ms-title{text-align:center; font-weight:700; color:#1a237e; font-size:15px; line-height:1.35; margin-bottom:8px;}
+.v03 .ms-title .ms-ends{font-weight:400; font-size:12.5px; color:#1f2937; margin-top:2px;}
+.v03 .ms-h{font-weight:700; color:#1a237e; font-size:16px; margin:9px 0 2px; line-height:1.2;}
+.v03 .ms-sub{font-weight:700; color:#1a237e; font-size:13.5px; margin:4px 0 1px 8px;}
+.v03 .ms-row{display:grid; grid-template-columns:minmax(190px,32%) 1fr minmax(120px,16%) minmax(90px,12%); column-gap:10px; padding:1px 0 1px 8px;}
+.v03 .ms-row>div{min-width:0; overflow-wrap:break-word;}
+.v03 .ms-row .ms-l{color:#111;}
+.v03 .ms-row .ms-v{color:#111;}
+.v03 .ms-row .ms-r{text-align:right; white-space:nowrap;}
+.v03 .ms-row .ms-t{text-align:right;}
+.v03 .ms-row.ms-basis{font-size:11px; color:#444;}
+.v03 .ms-row.ms-nv{background:#fbe9e9; border-left:3px solid #c00000; margin:2px 0;}
+.v03 .ms-row.ms-nv .ms-l{color:#c00000; font-weight:700;}
+.v03 .ms-row.ms-nv .ms-nv-msg{color:#7a0000;}
+.v03 .ms-row.ms-advrow{background:#f4f6fb; border-left:3px solid #6b7280; margin:2px 0; font-size:11px;}
+.v03 .ms-row.ms-advrow .ms-l{color:#374151; font-weight:700;}
+.v03 .ms-row.ms-advrow .ms-adv-msg{color:#374151;}
+.v03 .ms-row.ms-pts{font-size:11px; color:#444; padding-left:24px;}
+.v03 .ms-inline-tag{float:right; padding-left:10px; color:#111;}
+.v03 .ms-warn{color:#c00000; font-weight:700;}
+.v03 .ms-loading{display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:10px; align-items:start;}
+.v03 .ms-loading.ms-loading-plain{grid-template-columns:1fr;}
+.v03 .ms-loadlist{font-family:"Courier New",monospace; font-size:12px; line-height:1.45; margin:2px 0 4px 8px; white-space:normal;}
+.v03 .ms-loadlist br+*{display:inline;}
+.v03 .ms-sketch svg.diag{width:100%; height:auto; display:block;}
+.v03 .ms-diagrams{margin:8px 0 4px; padding:6px 8px 4px; border:1px solid #c9c9c9; background:#fff;}
+.v03 .ms-diagrams .ms-dt{font-size:11px; font-weight:700; color:#1a237e; letter-spacing:.3px; text-transform:uppercase; margin:2px 0 1px;}
+.v03 .ms-diag-full{margin-bottom:6px;}
+.v03 .ms-diag-full svg.diag{max-width:640px; margin:0 auto;}
+.v03 .ms-mode{margin:6px 0 4px 8px; padding:4px 8px; border:1px solid #c9c9c9; background:#fff;}
+.v03 .ms-mode .ms-dt{font-size:11px; color:#1a237e; margin:0 0 2px;}
+.v03 .ms-mode svg.diag{width:100%; height:auto; display:block; max-width:640px; margin:0 auto;}
+.v03 .ms-diag-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;}
+.v03 .ms-diag-grid>div{min-width:0;}
+.v03 .ms-diagrams svg.diag{width:100%; height:auto; display:block;}
+.v03 .ms-diag-note{margin:4px 0 0; font-style:italic;}
+.v03 .ms-forces, .v03 .ms-combos{width:100%; border-collapse:collapse; margin:8px 0 4px; font-size:12px; table-layout:fixed;}
+.v03 .ms-forces th, .v03 .ms-forces td, .v03 .ms-combos th, .v03 .ms-combos td{border:1px solid #333; padding:2px 5px; vertical-align:middle;}
+.v03 .ms-forces th{font-weight:400; text-align:center; line-height:1.1;}
+.v03 .ms-forces .ms-ft{font-size:13px; padding:3px 0;}
+.v03 .ms-forces td.num, .v03 .ms-combos td.num{text-align:right; white-space:nowrap;}
+.v03 .ms-combos th{font-weight:700; text-align:left;}
+.v03 .ms-note{font-size:11px; color:#333; margin:2px 0 4px 8px;}
+.v03 .ms-unity{border:1px solid #333; margin:12px 0 6px; padding:4px 8px;}
+.v03 .ms-unity-head, .v03 .ms-unity-vals{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:6px; text-align:center;}
+.v03 .ms-unity-head{font-size:11px; line-height:1.15;}
+.v03 .ms-unity-vals{font-size:13px; margin-top:4px;}
+.v03 .ms-unity .ms-max{font-weight:700;}
+.v03 .ms-verdict{font-weight:800; font-size:15px; margin-top:6px; font-family:Arial,Helvetica,sans-serif;}
+.v03 .ms-verdict.ms-pass{color:#166534;}
+.v03 .ms-verdict.ms-failv{color:#c00000;}
+.v03 .ms-footer{font-size:11.5px; margin-top:4px; line-height:1.4;}
+.v03 .ms-footer div{margin:2px 0;}
+.v03 .ms-footer.ms-adv{color:#333;}
+.v03 svg.diag{width:100%; height:auto; display:block;}
+.v03 svg.diag-hover{cursor:crosshair;}
+.v03 .diag-hover .hover{pointer-events:none;}
+.v03 .diag-hover .hover text{font:700 11px Arial,Helvetica,sans-serif;}

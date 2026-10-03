@@ -1,0 +1,1643 @@
+<title>Masonry Support Designer</title>
+<!--
+  Masonry Support Designer — steel masonry support + torsion beam to BS 5950-1:2000, SCI P057 / P110 / P157.
+  Method: BS 5950-1:2000 with SCI P057 / P110 / P157, or Eurocode 3 (UK NA) with SCI P385.
+  Engine: engine_js/sms.js (inlined at build).
+  Validation: every benchmark run embedded below is recalculated on page load (Validation tab).
+  Units inside: N, mm, N/mm2; angles in radians. Display converts to kN, kNm, degrees.
+  Built by app/build_app.py from app/template.html — edit the template, not the built file.
+-->
+<style>
+:root{
+  --bg:#ECEFF2;--surface:#FFFFFF;--surface-2:#F5F7F9;--ink:#16202A;--ink-2:#404C59;--muted:#687382;
+  --rule:#D0D7DE;--rule-2:#E3E7EB;--accent:#1D5A86;--accent-2:#164B70;--accent-soft:#E1EBF3;
+  --pass:#1B7445;--pass-soft:#DDF0E5;--warn:#8F5A00;--warn-soft:#F9EDD5;--fail:#B1261E;--fail-soft:#F9E3E1;
+  --steel-fill:#C5D0DA;--steel-line:#34475A;--shim:#E3C77A;--brick-fill:#EDD3C5;--mortar:#F9F2EC;--brick:#A85E43;
+  --dim:#56626F;--load:#1D5A86;--hatch:#8C98A5;
+  --font-ui:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --font-tech:"Bahnschrift","DIN Alternate","Segoe UI",system-ui,sans-serif;
+  --font-num:"Cascadia Mono",Consolas,ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#0E141A;--surface:#151D25;--surface-2:#1A242E;--ink:#E2E8EE;--ink-2:#B3BEC9;--muted:#8591A0;
+  --rule:#293542;--rule-2:#212B36;--accent:#6CA5D2;--accent-2:#8FBDE2;--accent-soft:#193246;
+  --pass:#5BC08B;--pass-soft:#14301F;--warn:#E2A64C;--warn-soft:#382A11;--fail:#F1776C;--fail-soft:#3B1915;
+  --steel-fill:#394958;--steel-line:#A7B9CA;--shim:#8C7639;--brick-fill:#553A2F;--mortar:#2B2420;--brick:#C9876B;
+  --dim:#9BA7B3;--load:#8FBDE2;--hatch:#5D6A77}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#0E141A;--surface:#151D25;--surface-2:#1A242E;--ink:#E2E8EE;--ink-2:#B3BEC9;--muted:#8591A0;
+  --rule:#293542;--rule-2:#212B36;--accent:#6CA5D2;--accent-2:#8FBDE2;--accent-soft:#193246;
+  --pass:#5BC08B;--pass-soft:#14301F;--warn:#E2A64C;--warn-soft:#382A11;--fail:#F1776C;--fail-soft:#3B1915;
+  --steel-fill:#394958;--steel-line:#A7B9CA;--shim:#8C7639;--brick-fill:#553A2F;--mortar:#2B2420;--brick:#C9876B;
+  --dim:#9BA7B3;--load:#8FBDE2;--hatch:#5D6A77}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font-ui)}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:16px;padding-block:14px 48px}
+sub,sup{font-size:.72em;line-height:0}
+button{font:600 12.5px/1 var(--font-ui);cursor:pointer}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--rule)}
+.brand h1{margin:0;font:600 23px/1.15 var(--font-tech);letter-spacing:.005em;text-wrap:balance}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:12.5px;max-width:70ch}
+.tools{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.tools label{font-size:12px;color:var(--muted)}
+.tools select{max-width:min(100%,400px)}
+.vchip{display:inline-flex;gap:8px;align-items:center;background:var(--pass-soft);color:var(--pass);border:1px solid transparent;border-radius:999px;padding:7px 12px;font-size:12px}
+.vchip b{font-family:var(--font-num);font-weight:600}
+.vchip.bad{background:var(--fail-soft);color:var(--fail)}
+.main{display:grid;grid-template-columns:minmax(290px,370px) minmax(0,1fr);gap:18px;align-items:start}
+.main>*{min-width:0}
+@media (max-width:960px){.main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:6px}
+form.inputs{position:sticky;top:env(safe-area-inset-top,0px);max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:960px){form.inputs{position:static;max-height:none}}
+details.grp{border-bottom:1px solid var(--rule-2)}
+details.grp:last-child{border-bottom:0}
+details.grp>summary{list-style:none;cursor:pointer;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;
+  font:600 11.5px/1 var(--font-tech);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary::after{content:"+";font:400 16px/1 var(--font-ui);color:var(--muted)}
+details.grp[open]>summary::after{content:"\2212"}
+.fields{display:grid;gap:7px;padding:0 14px 13px}
+.f{display:grid;grid-template-columns:minmax(0,1fr) 104px 46px;gap:8px;align-items:center}
+.f>label{font-size:13px;color:var(--ink-2)}
+.f .u{font-size:12px;color:var(--muted)}
+.f.sel>select{grid-column:2/4}
+.f.stack{grid-template-columns:minmax(0,1fr);gap:4px}
+.f.stack>label{font-size:12px;color:var(--muted)}
+.f.chk{grid-template-columns:auto minmax(0,1fr);gap:8px}
+.f.txt>input{grid-column:2/4}
+input[type=number],input[type=text],select{width:100%;min-width:0;font:13px/1.25 var(--font-ui);color:var(--ink);background:var(--surface-2);
+  border:1px solid var(--rule);border-radius:4px;padding:6px 7px}
+input[type=number]{font-family:var(--font-num);text-align:right;font-variant-numeric:tabular-nums}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);margin:0}
+input:disabled{opacity:.55}
+input.bad{border-color:var(--fail);background:var(--fail-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.hint{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12px;color:var(--muted);margin-top:-2px}
+.btn{background:var(--accent-soft);color:var(--accent-2);border:1px solid transparent;border-radius:4px;padding:5px 9px}
+.btn:hover{border-color:var(--accent)}
+.f.loads{grid-template-columns:minmax(0,1fr);gap:6px}
+.lhead{font-size:12px;color:var(--muted)}
+.llist{display:grid;gap:6px}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) 78px 36px 28px;gap:6px;align-items:center}
+.lrow .del{padding:5px 0;text-align:center;line-height:1.1}
+.lempty,.ltotal{font-size:12px;color:var(--muted)}
+.lfoot{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.col{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.msgs{display:grid;gap:6px}
+.msg{padding:8px 12px;border-radius:5px;font-size:13px;border:1px solid transparent}
+.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg.err{background:var(--fail-soft);color:var(--fail)}
+.verdict{display:flex;gap:14px;align-items:center;padding:14px 16px}
+.verdict .state{flex:none;font:700 12.5px/1 var(--font-tech);letter-spacing:.09em;text-transform:uppercase;padding:8px 10px;border-radius:4px}
+.verdict.ok .state{background:var(--pass-soft);color:var(--pass)}
+.verdict.ng .state{background:var(--fail-soft);color:var(--fail)}
+.verdict.na .state{background:var(--warn-soft);color:var(--warn)}
+.verdict h2{margin:0;font:600 17px/1.25 var(--font-tech);text-wrap:balance}
+.verdict p{margin:3px 0 0;color:var(--muted);font-size:13px}
+dl.keys{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border-top:1px solid var(--rule-2)}
+dl.keys>div{padding:9px 14px;border-right:1px solid var(--rule-2)}
+dl.keys dt{font-size:11.5px;color:var(--muted)}
+dl.keys dd{margin:2px 0 0;font:600 15px/1.2 var(--font-num);font-variant-numeric:tabular-nums}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1240px){.split{grid-template-columns:minmax(0,1fr)}}
+.phead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:12px 14px 6px}
+.phead h3{margin:0;font:600 11.5px/1 var(--font-tech);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2)}
+.phead span{font-size:12px;color:var(--muted)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font:600 11px/1.2 var(--font-tech);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--rule)}
+td{padding:6px 10px;border-top:1px solid var(--rule-2);vertical-align:middle}
+td.n,th.n{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+td .ref{display:block;font-size:11.5px;color:var(--muted)}
+.bar{position:relative;height:7px;min-width:70px;background:var(--rule-2);border-radius:4px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--pass)}
+.bar.near i{background:var(--warn)}
+.bar.over i{background:var(--fail)}
+.bar::after{content:"";position:absolute;left:80%;top:0;bottom:0;width:1.5px;background:var(--ink-2);opacity:.6}
+.res{display:inline-block;font:700 10.5px/1 var(--font-tech);letter-spacing:.08em;padding:4px 6px;border-radius:3px}
+.res.ok{color:var(--pass);background:var(--pass-soft)}
+.res.ng{color:var(--fail);background:var(--fail-soft)}
+.res.na{color:var(--warn);background:var(--warn-soft)}
+.drawwrap{padding:4px 12px 12px}
+svg.draw{display:block;width:100%;height:auto;max-height:540px}
+.stl{fill:var(--steel-fill);stroke:var(--steel-line);stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.shim{fill:var(--shim);stroke:var(--steel-line);stroke-width:1;vector-effect:non-scaling-stroke}
+.bolt{fill:var(--steel-line)}
+.mas{fill:url(#mas);stroke:var(--brick);stroke-width:1.1;vector-effect:non-scaling-stroke}
+.wall{fill:url(#hatch);stroke:var(--dim);stroke-width:1;vector-effect:non-scaling-stroke}
+.slab{fill:url(#hatch);stroke:var(--ink-2);stroke-width:1.1;vector-effect:non-scaling-stroke}
+.dim{stroke:var(--dim);stroke-width:1;vector-effect:non-scaling-stroke;fill:none}
+.dimt{fill:var(--dim);font-family:var(--font-num)}
+.ld{stroke:var(--load);stroke-width:1.6;vector-effect:non-scaling-stroke;fill:none}
+.ldt{fill:var(--load);font-family:var(--font-ui);font-weight:600}
+.scm{fill:none;stroke:var(--fail);stroke-width:1.3;vector-effect:non-scaling-stroke}
+.sct{fill:var(--fail);font-family:var(--font-ui);font-weight:600}
+.lft{fill:var(--brick);font-family:var(--font-ui)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 14px 12px;font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);overflow-x:auto;padding-inline:8px}
+.tabs button{flex:none;background:none;border:0;border-bottom:2px solid transparent;padding:12px 12px 10px;color:var(--muted);font-size:13px}
+.tabs button[aria-selected="true"]{color:var(--accent-2);border-bottom-color:var(--accent)}
+.tabpanel{padding:16px 20px 22px}
+@media (max-width:640px){.tabpanel{padding:14px 12px 18px}}
+.tblock{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule);border-radius:4px;overflow:hidden;font-size:12.5px;margin-bottom:6px}
+@media (max-width:640px){.tblock{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tblock>div{padding:6px 9px;border-right:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2);min-width:0;overflow-wrap:anywhere}
+.tblock span{display:block;font:600 9.5px/1.3 var(--font-tech);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.sh-h{margin:20px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--rule);font:600 14.5px/1.3 var(--font-tech);color:var(--accent-2);text-wrap:balance}
+.sh-h small{display:block;font:400 12px/1.35 var(--font-ui);color:var(--muted);margin-top:2px}
+.r{display:grid;grid-template-columns:minmax(0,33%) minmax(0,1fr);gap:2px 16px;padding:3px 0;font-size:13px}
+.r .lb{color:var(--ink-2)}
+.r .ex{min-width:0;overflow-wrap:anywhere}
+.r .v{font-family:var(--font-num);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:720px){.r{grid-template-columns:minmax(0,1fr)}.r .lb{font-size:12px;color:var(--muted)}}
+.ck{display:flex;gap:10px;align-items:center;margin:6px 0 5px;padding:6px 10px;border-radius:4px;font-size:13px}
+.ck.ok{background:var(--pass-soft)}
+.ck.ng{background:var(--fail-soft)}
+.ck.na{background:var(--warn-soft)}
+.ck .tag{font:700 11px/1 var(--font-tech);letter-spacing:.09em}
+.ck.ok .tag{color:var(--pass)}.ck.ng .tag{color:var(--fail)}.ck.na .tag{color:var(--warn)}
+.ck .u{margin-left:auto;font-family:var(--font-num);font-size:12px;color:var(--ink-2);white-space:nowrap}
+.nt{margin:5px 0;color:var(--muted);font-size:12.5px;max-width:90ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule-2);border:1px solid var(--rule-2);border-radius:5px;overflow:hidden;margin:12px 0 16px}
+.stats>div{background:var(--surface);padding:10px 12px}
+.stats dt{font-size:11.5px;color:var(--muted)}
+.stats dd{margin:3px 0 0;font:600 16px/1.2 var(--font-num)}
+.prose{max-width:88ch}
+.prose p{margin:6px 0}
+.prose h3{margin:18px 0 6px;font:600 14.5px/1.3 var(--font-tech);color:var(--accent-2)}
+.notes{display:grid;gap:10px;margin-top:10px}
+.note{border:1px solid var(--rule-2);border-left:3px solid var(--rule);border-radius:4px;padding:9px 12px;background:var(--surface-2)}
+.note.warn{border-left-color:var(--warn)}
+.note.info{border-left-color:var(--accent)}
+.note h4{margin:0 0 3px;font-size:13.5px}
+.note p{margin:0;font-size:13px;color:var(--ink-2)}
+.note .id{font:600 10.5px/1 var(--font-tech);letter-spacing:.08em;color:var(--muted);margin-right:6px}
+.foot{margin-top:18px;color:var(--muted);font-size:12px}
+.msg.info{background:var(--accent-soft);color:var(--accent-2)}
+.v03{color:#111;background:#fff;border-radius:4px;overflow-x:auto;margin-top:8px}
+table.lt td,table.lt th{padding:4px 8px}
+/*@@V03_CSS@@*/
+.v03 .ms-brief{min-width:720px}
+@page{size:A4;margin:12mm 12mm 14mm}
+@media print{
+  body{background:#fff;color:#000}
+  .top .tools,form.inputs,.tabs,.no-print,.msgs{display:none!important}
+  .main{display:block}.panel{border:0}
+  .tabpanel{padding:0}
+  #tab-sheet{display:block!important}
+  #tab-section,#tab-validation,#tab-notes{display:none!important}
+  .ck,.sh-h{break-inside:avoid}
+}
+.tpages{display:flex;flex-direction:column;align-items:center;gap:14px;padding:12px 0;background:var(--surface-2,#eef0f2)}
+.tpages svg.tpage{display:block;width:100%;max-width:816px;height:auto;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28)}
+.tpages svg.tpage text{white-space:pre}
+@media print{
+  body.calc-sheet{background:#fff}
+  body.calc-sheet .top,body.calc-sheet form.inputs,body.calc-sheet .msgs,body.calc-sheet #verdictBox,body.calc-sheet .split,
+  body.calc-sheet .tabs,body.calc-sheet .foot,body.calc-sheet #tab-section,body.calc-sheet #tab-validation,body.calc-sheet #tab-notes{display:none!important}
+  body.calc-sheet .wrap,body.calc-sheet .main,body.calc-sheet .col,body.calc-sheet .panel,body.calc-sheet .tabpanel{display:block!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;max-width:none!important;width:auto!important;background:#fff!important}
+  body.calc-sheet .tpages{display:block;padding:0;background:#fff}
+  body.calc-sheet .tpages svg.tpage{width:auto;height:auto;max-width:none;box-shadow:none;margin:0;break-after:page;page-break-after:always}
+  body.calc-sheet .tpages svg.tpage:last-child{break-after:auto;page-break-after:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Masonry Support Designer</h1>
+      <p>Steel masonry support with torsion beam. BS&nbsp;5950-1:2000 with SCI&nbsp;P057 / P110 / P157, or Eurocode&nbsp;3 (UK NA) with SCI&nbsp;P385 on the beam-v03 engine.</p>
+    </div>
+    <div class="tools">
+      <label for="preset">Load a benchmark case</label>
+      <select id="preset"></select>
+      <button type="button" class="vchip" id="vchip" title="Open the Validation tab"></button>
+    </div>
+  </header>
+
+  <div class="main">
+    <form class="inputs panel" id="form" autocomplete="off" novalidate></form>
+
+    <div class="col">
+      <div class="msgs" id="msgs"></div>
+      <section class="panel" id="verdictBox">
+        <div class="verdict" id="verdict"></div>
+        <dl class="keys" id="keys"></dl>
+      </section>
+      <div class="split">
+        <section class="panel">
+          <div class="phead"><h3>Design checks</h3><span>utilisation, bar marks 1.0</span></div>
+          <div class="scroll"><table id="util"></table></div>
+        </section>
+        <section class="panel">
+          <div class="phead"><h3>Cross-section</h3><span>to scale, leaves cut short</span></div>
+          <div class="drawwrap" id="draw"></div>
+          <div class="legend" id="legend"></div>
+        </section>
+      </div>
+      <section class="panel">
+        <div class="tabs" role="tablist" id="tabs">
+          <button type="button" role="tab" id="t-sheet" aria-controls="tab-sheet" aria-selected="true">Calculation sheet</button>
+          <button type="button" role="tab" id="t-section" aria-controls="tab-section" aria-selected="false">Section properties</button>
+          <button type="button" role="tab" id="t-validation" aria-controls="tab-validation" aria-selected="false">Validation</button>
+          <button type="button" role="tab" id="t-notes" aria-controls="tab-notes" aria-selected="false">Engineering notes</button>
+        </div>
+        <div class="tabpanel" role="tabpanel" id="tab-sheet" aria-labelledby="t-sheet"></div>
+        <div class="tabpanel" role="tabpanel" id="tab-section" aria-labelledby="t-section" hidden></div>
+        <div class="tabpanel" role="tabpanel" id="tab-validation" aria-labelledby="t-validation" hidden></div>
+        <div class="tabpanel" role="tabpanel" id="tab-notes" aria-labelledby="t-notes" hidden></div>
+      </section>
+      <p class="foot" id="foot"></p>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="sms-data">@@DATA@@</script>
+<script>
+/*@@SMS_JS@@*/
+</script>
+<script>
+/*@@BEAMV03_JS@@*/
+</script>
+<script>
+/*@@EC3_ADAPTER_JS@@*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const SMS = window.SMS;
+  const DATA = JSON.parse(document.getElementById('sms-data').textContent);
+  const CAT = DATA.catalog;
+  const DEG = 180 / Math.PI;
+  const $ = id => document.getElementById(id);
+
+  // ------------------------------------------------------------------ formatting
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function mk(s) { // mini markup for symbols: x_{sub}, x^{sup}, x_1, x^2
+    return esc(s).replace(/_\{([^}]*)\}/g, '<sub>$1</sub>').replace(/\^\{([^}]*)\}/g, '<sup>$1</sup>')
+      .replace(/_([A-Za-z0-9])/g, '<sub>$1</sub>').replace(/\^([0-9])/g, '<sup>$1</sup>');
+  }
+  function f(v, dp = 2) {
+    if (v === Infinity) return '∞';
+    if (typeof v !== 'number' || !Number.isFinite(v)) return '—';
+    const r = v.toFixed(dp);
+    return /^-0(\.0+)?$/.test(r) ? r.slice(1) : r;
+  }
+  function sci(v, sig = 3) {
+    if (!Number.isFinite(v)) return '—';
+    if (v === 0) return '0';
+    const e = Math.floor(Math.log10(Math.abs(v))), m = v / 10 ** e;
+    return `${m.toFixed(sig - 1)}×10<sup>${e}</sup>`;
+  }
+  const pct = x => (100 * x < 0.0001 && x > 0 ? '<0.0001' : (100 * x).toFixed(4)) + ' %';
+  const r6 = x => Math.round(x * 1e6) / 1e6;
+
+  // ------------------------------------------------------------------ BS 5950 Table 13 (compression flange laterally restrained, nominal torsional restraint)
+  const TABLE13 = {
+    both_full: ['Both flanges fully restrained against rotation on plan', 0.7, 0.85],
+    comp_full: ['Compression flange fully restrained against rotation on plan', 0.75, 0.9],
+    both_partial: ['Both flanges partially restrained against rotation on plan', 0.8, 0.95],
+    comp_partial: ['Compression flange partially restrained against rotation on plan', 0.85, 1.0],
+    both_free: ['Both flanges free to rotate on plan', 1.0, 1.2],
+  };
+  const autoKLT = s => TABLE13[s.restraint][s.destab ? 2 : 1];
+  const T13_SHORT = { both_full: 'Both flanges fully restrained', comp_full: 'Compression flange fully restrained',
+    both_partial: 'Both flanges partially restrained', comp_partial: 'Compression flange partially restrained', both_free: 'Both flanges free to rotate' };
+
+  // ------------------------------------------------------------------ input model
+  const DEFAULTS = {
+    design_method: 'Masonry support and torsion', sb_method: 'Plate', fixing: 'Weld top', con_stage: false,
+    gG: 1.4, gQ: 1.6, gmss: 1.0,
+    mb_family: 'UKPFC', mb_name: 'UKPFC 300x100x46', mb_D: 300, mb_B: 100, mb_t: 9, mb_T: 16.5, mb_r: 15,
+    grade_mb: 'S275', L: 5000, LLT: 5000, restraint: 'both_free', destab: false, klt_override: false, K_LT: 1.0,
+    mLT: 1.0, Mx_add: 0, Fv_add: 0, warping: 'Free',
+    lh: 150, lplate: 250, tsb: 10, grade_sb: 'S275',
+    angle_family: 'EA', angle_name: 'RSA 120x120x10', ang_D: 120, ang_B: 120, ang_t: 10, ang_r1: 13, ang_r2: 4.8, orientation: 'Long',
+    ss_lh: 150, ss_lv: 150, ss_t: 6, ss_r1: 12, grade_ss: '316',
+    e1: 85, s_weld: 6, weld_class: '35', l_weld: 1000,
+    bolt_grade: '8.8', bolt_size: 'M12', Bbolt: 450, eb: 35, shim: 0,
+    b_msb: 100, h_msb: 2000, rho_sb: 20, PGadd_sb: 0, PQadd_sb: 0, c: 50,
+    b_mmb: 140, h_mmb: 2000, rho_mb: 20, e_mb: 0, PGadd_mb: 0, PQadd_mb: 0,
+    sb_load: 'Masonry', PG_ssb: 2, PQ_ssb: 1.5, d_ssb: 150, mb_load: 'Masonry', PG_smb: 3, PQ_smb: 2, d_smb: 150, e2: 85,
+    h_bf: 0, twist_on: true, defl_on: true,
+    twist_check: 'Angular', phi_lim: 1.0, h_d: 100, d_h_lim: 2, k_delta: 360, d_lim_abs: 3, d_add: 0,
+    project: '', jobref: '', calcby: '', company: '', address: '', section: '', calcdate: '', chkby: '', chkdate: '', appby: '', appdate: '', paper: 'Letter',
+    code: 'BS5950', mirror: 'std', zg_inner: 'top', gm0ss: 1.1,
+    G_sb: null, Q_sb: null, G_mb: null, Q_mb: null,   // direct-load lists [{label, w kN/m}]; null = not yet filled (initDirect)
+  };
+  let st = Object.assign({}, DEFAULTS);
+
+  const isTor = s => s.design_method === 'Masonry support and torsion';
+  const isEC = s => s.code === 'EC3', notEC = s => !isEC(s);
+  const normName = n => String(n).toLowerCase().replace(/^(ukpfc|ukb|ukc|rhs|shs)\s+/, '').replace(/\s+/g, '').replace(/\.0(?=x|$)/g, '');
+  const isPlate = s => s.sb_method === 'Plate', isRSA = s => s.sb_method === 'Cantilever', isSS = s => s.sb_method === 'SCI';
+  const fixOf = s => isPlate(s) ? 'Weld top' : isSS(s) ? 'Bolt' : s.fixing;
+  const isBolt = s => fixOf(s) === 'Bolt', isWeld = s => fixOf(s) === 'Weld top';
+  // "Slab" options: slab reactions instead of masonry (the stainless SCI P157 method keeps the masonry model)
+  const slabSB = s => s.sb_load === 'Slab' && !isSS(s), slabMB = s => isTor(s) && s.mb_load === 'Slab';
+  // "Direct loads": dead and imposed line loads typed instead of a leaf height and density (any number of each).
+  // The engine sees a leaf of zero height with the totals as the additional loads (SMS.direct.apply).
+  const directSB = s => s.sb_load === 'Direct' && !isSS(s), directMB = s => isTor(s) && s.mb_load === 'Direct';
+  const wallSB = s => !slabSB(s) && !directSB(s), wallMB = s => !slabMB(s) && !directMB(s);
+  const loadSum = rows => (rows || []).reduce((t, r) => t + Number(r.w), 0);
+  // first switch to direct loads: start from the wall already typed, so the results do not move
+  function initDirect(s) {
+    const fill = (b, h, rho, g, q, kG, kQ, what) => {
+      if (s[kG] && s[kQ]) return;
+      const wall = Number(s[b]) * Number(s[h]) * Number(s[rho]) * 1e-6, G = [], Q = [];
+      if (Number.isFinite(wall) && wall !== 0) G.push({ label: what, w: r6(wall) });
+      if (Number(s[g])) G.push({ label: 'Extra dead load', w: r6(Number(s[g])) });
+      if (!G.length) G.push({ label: '', w: 0 });
+      Q.push({ label: '', w: r6(Number(s[q]) || 0) });
+      s[kG] = G; s[kQ] = Q;
+    };
+    if (s.sb_load === 'Direct') fill('b_msb', 'h_msb', 'rho_sb', 'PGadd_sb', 'PQadd_sb', 'G_sb', 'Q_sb', 'Outer leaf masonry');
+    if (s.mb_load === 'Direct') fill('b_mmb', 'h_mmb', 'rho_mb', 'PGadd_mb', 'PQadd_mb', 'G_mb', 'Q_mb', 'Inner leaf masonry');
+  }
+  const mbUser = s => s.mb_family.startsWith('user');
+  const angUser = s => s.angle_family === 'user';
+  const angleRec = s => angUser(s) ? null : (CAT[s.angle_family] || []).find(a => a.name === s.angle_name);
+  const unequal = s => { const a = angleRec(s); return a ? a.D !== a.B : Number(s.ang_D) !== Number(s.ang_B); };
+  const mbType = s => ({ userC: 'C', userI: 'I', userHR: 'HR', UKPFC: 'C', UKB: 'I', UKC: 'I', RHS: 'HR', SHS: 'HR' }[s.mb_family]);
+
+  const MB_FAM = [['UKPFC', 'UKPFC (parallel flange channel)'], ['UKB', 'UKB (universal beam)'], ['UKC', 'UKC (universal column)'],
+    ['RHS', 'RHS (hot-finished)'], ['SHS', 'SHS (hot-finished)'], ['userC', 'User-defined channel'], ['userI', 'User-defined I-section'], ['userHR', 'User-defined RHS']];
+  const ANG_FAM = [['EA', 'Equal angle'], ['UA', 'Unequal angle'], ['user', 'User-defined angle']];
+  const GRADES = [['S275', 'S275'], ['S355', 'S355']];
+
+  // field: [key, label, kind, unit|options, show, extra]
+  const GROUPS = [
+    { id: 'g-design', title: 'Design basis', open: true, fields: [
+      ['code', 'Design code', 'stack', [['BS5950', 'BS 5950-1:2000'], ['EC3', 'Eurocode 3, UK NA']]],
+      ['design_method', 'What to design', 'stack', [['Masonry support and torsion', 'Support member and torsion beam'], ['Masonry support', 'Support member on a wall or frame']]],
+      ['sb_method', 'Support member', 'stack', [['Plate', 'Steel plate welded under the beam'], ['Cantilever', 'Hot-rolled angle (RSA)'], ['SCI', 'Cold-formed stainless angle']]],
+      ['fixing', 'Fixing', 'sel', [['Weld top', 'Welded'], ['Bolt', 'Bolted']], isRSA],
+      ['con_stage', 'Construction stage check (1.2 m high wall)', 'chk', null, s => isPlate(s) && wallSB(s)],
+    ] },
+    { id: 'g-beam', title: 'Torsion beam', open: true, show: isTor, fields: [
+      ['mb_family', 'Section type', 'stack', MB_FAM],
+      ['mb_name', 'Section', 'stack', 'dyn-mb', s => !mbUser(s)],
+      ['mirror', 'Channel orientation', 'stack', [['std', 'Web to the cavity (standard)'], ['mirror', 'Toes to the cavity (mirrored)']], s => mbType(s) === 'C'],
+      ['mb_D', 'Depth D', 'num', 'mm', mbUser], ['mb_B', 'Width B', 'num', 'mm', mbUser], ['mb_t', 'Web thickness t', 'num', 'mm', mbUser],
+      ['mb_T', 'Flange thickness T', 'num', 'mm', s => mbUser(s) && s.mb_family !== 'userHR'],
+      ['mb_r', 'Root radius r', 'num', 'mm', s => mbUser(s) && s.mb_family !== 'userHR'],
+      ['grade_mb', 'Steel grade', 'sel', GRADES],
+      ['L', 'Span L', 'num', 'mm'], ['LLT', 'LTB segment length L_{LT}', 'num', 'mm'],
+      ['restraint', 'Flange rotation on plan at the ends (BS 5950 Table 13)', 'stack', Object.keys(TABLE13).map(k => [k, T13_SHORT[k]]), notEC],
+      ['destab', 'Destabilising load', 'chk', null, notEC],
+      ['klt_override', 'Override the effective length factor', 'chk', null, notEC],
+      ['K_LT', 'Effective length factor K_{LT}', 'num', '', notEC, { klt: true }],
+      ['mLT', 'EUM factor m_{LT}', 'num', '', notEC],
+      ['Mx_add', 'Additional moment M_{x,add}', 'num', 'kNm', notEC], ['Fv_add', 'Additional shear F_{v,add}', 'num', 'kN', notEC],
+      ['zg_inner', 'Inner leaf load acts at (M_{cr} load height)', 'stack', [['top', 'Top flange (destabilising)'], ['sc', 'Shear centre (not destabilising)']], isEC],
+      ['warping', 'Warping at the ends', 'sel', [['Free', 'Free (P057 case 4)'], ['Fixed', 'Fixed (P057 case 6)']], s => mbType(s) !== 'HR'],
+    ] },
+    { id: 'g-support', title: 'Support member', open: true, fields: [
+      ['lh', 'Projection beyond beam l_{h}', 'num', 'mm', isPlate], ['lplate', 'Overall plate length l_{plate}', 'num', 'mm', isPlate],
+      ['tsb', 'Plate thickness t_{sb}', 'num', 'mm', isPlate],
+      ['angle_family', 'Angle type', 'stack', ANG_FAM, isRSA],
+      ['angle_name', 'Angle', 'stack', 'dyn-ang', s => isRSA(s) && !angUser(s)],
+      ['ang_D', 'Long leg D', 'num', 'mm', s => isRSA(s) && angUser(s)], ['ang_B', 'Short leg B', 'num', 'mm', s => isRSA(s) && angUser(s)],
+      ['ang_t', 'Thickness t', 'num', 'mm', s => isRSA(s) && angUser(s)], ['ang_r1', 'Root radius r_{1}', 'num', 'mm', s => isRSA(s) && angUser(s)],
+      ['ang_r2', 'Toe radius r_{2}', 'num', 'mm', s => isRSA(s) && angUser(s)],
+      ['orientation', 'Horizontal leg', 'sel', [['Long', 'Long leg'], ['Short', 'Short leg']], s => isRSA(s) && unequal(s)],
+      ['h_bf', 'Angle soffit to beam soffit h_{bf}', 'num', 'mm', s => isRSA(s) && isTor(s)],
+      ['grade_sb', 'Steel grade', 'sel', GRADES, s => !isSS(s)],
+      ['ss_lh', 'Horizontal leg l_{h}', 'num', 'mm', isSS], ['ss_lv', 'Vertical leg l_{v}', 'num', 'mm', isSS],
+      ['ss_t', 'Thickness t_{sb}', 'num', 'mm', isSS], ['ss_r1', 'Inside bend radius r_{1}', 'num', 'mm', isSS],
+      ['grade_ss', 'Stainless grade', 'sel', [['304', '1.4301 (304)'], ['304L', '1.4307 (304L)'], ['316', '1.4401 (316)'], ['316L', '1.4404 (316L)']], isSS],
+      ['gm0ss', 'Stainless γ_{M0} [verify against the UK NA]', 'num', '', s => isEC(s) && isSS(s)],
+      ['e1', 'Heel to load e_{1}', 'num', 'mm', s => !isSS(s), { e1hint: true }],
+    ] },
+    { id: 'g-fix', title: 'Fixing', open: true, fields: [
+      ['s_weld', 'Fillet weld leg', 'num', 'mm', isWeld],
+      ['weld_class', 'Electrode', 'sel', [['35', 'E35'], ['42', 'E42'], ['50', 'E50']], isWeld],
+      ['l_weld', 'Weld length per metre', 'num', 'mm/m', s => isRSA(s) && isWeld(s)],
+      ['bolt_grade', 'Bolt grade', 'sel', [['4.6', 'Grade 4.6'], ['8.8', 'Grade 8.8']], isBolt],
+      ['bolt_size', 'Bolt size', 'sel', [['M12', 'M12'], ['M16', 'M16'], ['M20', 'M20'], ['M24', 'M24']], isBolt],
+      ['Bbolt', 'Bolt spacing B_{bolt}', 'num', 'mm', isBolt], ['eb', 'Top of angle to bolt e_{b}', 'num', 'mm', isBolt],
+      ['shim', 'Shim thickness s', 'num', 'mm', isBolt],
+    ] },
+    { id: 'g-outer', title: 'Load on the support member', open: true, fields: [
+      ['sb_load', 'Carried load', 'sel', [['Masonry', 'Masonry outer leaf'], ['Direct', 'Direct loads'], ['Slab', 'Slab reactions']], s => !isSS(s)],
+      ['b_msb', 'Leaf width', 'num', 'mm', s => !slabSB(s)], ['h_msb', 'Leaf height', 'num', 'mm', wallSB],
+      ['rho_sb', 'Density', 'num', 'kN/m³', wallSB],
+      ['PGadd_sb', 'Extra dead load', 'num', 'kN/m', wallSB], ['PQadd_sb', 'Extra imposed load', 'num', 'kN/m', wallSB],
+      ['G_sb', 'Dead loads', 'loads', 'kN/m', directSB, { what: 'dead load', wall: ['b_msb', 'rho_sb'] }],
+      ['Q_sb', 'Imposed loads', 'loads', 'kN/m', directSB, { what: 'imposed load' }],
+      ['PG_ssb', 'Slab dead reaction P_{Gssb}', 'num', 'kN/m', slabSB], ['PQ_ssb', 'Slab imposed reaction P_{Qssb}', 'num', 'kN/m', slabSB],
+      ['d_ssb', 'Slab depth d_{ssb} (record only)', 'num', 'mm', slabSB],
+      ['c', 'Cavity width c', 'num', 'mm'],
+    ] },
+    { id: 'g-inner', title: 'Load on the torsion beam', open: true, show: isTor, fields: [
+      ['mb_load', 'Carried load', 'sel', [['Masonry', 'Masonry inner leaf'], ['Direct', 'Direct loads'], ['Slab', 'Slab reactions']]],
+      ['b_mmb', 'Leaf width', 'num', 'mm', s => !slabMB(s)], ['h_mmb', 'Leaf height', 'num', 'mm', wallMB],
+      ['rho_mb', 'Density', 'num', 'kN/m³', wallMB],
+      ['e_mb', 'Beam edge to leaf face e_{mb}', 'num', 'mm'],
+      ['PGadd_mb', 'Extra dead load', 'num', 'kN/m', wallMB], ['PQadd_mb', 'Extra imposed load', 'num', 'kN/m', wallMB],
+      ['G_mb', 'Dead loads', 'loads', 'kN/m', directMB, { what: 'dead load', wall: ['b_mmb', 'rho_mb'] }],
+      ['Q_mb', 'Imposed loads', 'loads', 'kN/m', directMB, { what: 'imposed load' }],
+      ['PG_smb', 'Slab dead reaction P_{Gsmb}', 'num', 'kN/m', slabMB], ['PQ_smb', 'Slab imposed reaction P_{Qsmb}', 'num', 'kN/m', slabMB],
+      ['e2', 'Beam face to slab load e_{2}', 'num', 'mm', slabMB], ['d_smb', 'Slab depth d_{smb} (record only)', 'num', 'mm', slabMB],
+    ] },
+    { id: 'g-sls', title: 'Serviceability limits', open: false, show: isTor, fields: [
+      ['twist_on', 'Check twist', 'chk'],
+      ['twist_check', 'Twist limit as', 'sel', [['Angular', 'Angle of twist'], ['Lever', 'Lever-arm movement']], s => s.twist_on],
+      ['phi_lim', 'Twist limit φ_{lim}', 'num', 'deg', s => s.twist_on && s.twist_check !== 'Lever'],
+      ['h_d', 'Lever arm h_{δ}', 'num', 'mm', s => s.twist_on && s.twist_check === 'Lever'],
+      ['d_h_lim', 'Movement limit δ_{h,lim}', 'num', 'mm', s => s.twist_on && s.twist_check === 'Lever'],
+      ['defl_on', 'Check beam deflection', 'chk'],
+      ['k_delta', 'Deflection limit L /', 'num', '', s => s.defl_on], ['d_lim_abs', 'Absolute deflection limit', 'num', 'mm', s => s.defl_on],
+      ['d_add', 'Additional deflection', 'num', 'mm', s => s.defl_on],
+    ] },
+    { id: 'g-factors', title: 'Partial factors', open: false, fields: [
+      ['gG', 'Dead γ_{fG}', 'num', ''], ['gQ', 'Imposed γ_{fQ}', 'num', ''], ['gmss', 'Stainless material γ_{m,ss}', 'num', '', s => isSS(s) && notEC(s)],
+    ] },
+    { id: 'g-title', title: 'Calculation sheet heading', open: false, fields: [
+      ['company', 'Company', 'txt'], ['address', 'Company line 2 (address)', 'txt'],
+      ['project', 'Project', 'txt'], ['jobref', 'Job ref.', 'txt'], ['section', 'Section', 'txt'],
+      ['calcby', 'Calc. by', 'txt'], ['calcdate', 'Date (blank: today)', 'txt'],
+      ['chkby', "Chk'd by", 'txt'], ['chkdate', 'Date', 'txt'], ['appby', "App'd by", 'txt'], ['appdate', 'Date', 'txt'],
+      ['paper', 'Paper', 'sel', [['Letter', 'Letter'], ['A4', 'A4']]],
+    ] },
+  ];
+  const FIELD = {};
+  GROUPS.forEach(g => g.fields.forEach(fd => { FIELD[fd[0]] = { key: fd[0], label: fd[1], kind: fd[2], opt: fd[3], show: fd[4], extra: fd[5] || {}, group: g }; }));
+
+  // ------------------------------------------------------------------ form <-> engine input
+  function mbFromCat(fam, name) {
+    const r = (CAT[fam] || []).find(x => x.name === name);
+    return r ? Object.assign({}, r) : null;
+  }
+  function findSection(name) {
+    for (const fam of ['UKPFC', 'UKB', 'UKC', 'RHS', 'SHS']) if ((CAT[fam] || []).some(x => x.name === name)) return fam;
+    return null;
+  }
+  function findAngle(name) {
+    for (const fam of ['EA', 'UA']) if ((CAT[fam] || []).some(x => x.name === name)) return fam;
+    return null;
+  }
+  function bearing(s) { // hint: distance from the heel to the bearing centreline
+    const emb = isTor(s) ? +s.e_mb : 0, shim = isBolt(s) ? +s.shim : 0;
+    let lh;
+    if (isPlate(s)) lh = +s.lh;
+    else if (isRSA(s)) { const a = angleRec(s), D = a ? a.D : Math.max(+s.ang_D, +s.ang_B), B = a ? a.B : Math.min(+s.ang_D, +s.ang_B); lh = (s.orientation === 'Short' && D !== B) ? B : D; }
+    else lh = +s.ss_lh;
+    const x0 = +s.c - emb - (isPlate(s) ? 0 : shim), x1 = Math.min(lh, x0 + +s.b_msb);
+    return { cl: (x0 + x1) / 2, dm: lh + (isPlate(s) ? 0 : shim) + emb - +s.c, lh };
+  }
+
+  function formToP(s) {
+    const errs = [], warns = [];
+    const num = k => { const v = Number(s[k]); if (!Number.isFinite(v)) errs.push(`${plain(FIELD[k].label)}: enter a number.`); return v; };
+    const pos = k => { const v = num(k); if (Number.isFinite(v) && v <= 0) errs.push(`${plain(FIELD[k].label)} must be greater than zero.`); return v; };
+    const tor = isTor(s), m = s.sb_method, fx = fixOf(s);
+    if (!tor && m === 'Plate') errs.push('A welded plate needs the torsion beam. Choose “Support member and torsion beam”, or use an angle.');
+    const dSB = directSB(s), dMB = directMB(s);
+    // direct loads: the hidden wall inputs are not read (a blank one must not block the run); the density only
+    // has to be a number, the leaf height is zero
+    const rhoOr = k => { const v = Number(s[k]); return (Number.isFinite(v) && v > 0 ? v : 20) * 1e-6; };
+    let p = {
+      gG: pos('gG'), gQ: pos('gQ'), gmss: m === 'SCI' ? pos('gmss') : 1, sb_method: m, fixing: fx, design_method: s.design_method,
+      c: num('c'), e_mb: tor ? num('e_mb') : 0, shim: fx === 'Bolt' ? num('shim') : 0,
+      b_msb: pos('b_msb'), h_msb: dSB ? 0 : num('h_msb'), rho_m_sb: dSB ? rhoOr('rho_sb') : num('rho_sb') * 1e-6,
+      PGadd_sb: dSB ? 0 : num('PGadd_sb'), PQadd_sb: dSB ? 0 : num('PQadd_sb'),
+      b_mmb: tor ? pos('b_mmb') : 0, h_mmb: tor && !dMB ? num('h_mmb') : 0, rho_m_mb: !tor ? 0 : dMB ? rhoOr('rho_mb') : num('rho_mb') * 1e-6,
+      PGadd_mb: tor && !dMB ? num('PGadd_mb') : 0, PQadd_mb: tor && !dMB ? num('PQadd_mb') : 0,
+      e1: m === 'SCI' ? 0 : num('e1'), grade_sb: m === 'SCI' ? s.grade_ss : s.grade_sb,
+      s_weld: fx === 'Weld top' ? pos('s_weld') : 6, weld_class: Number(s.weld_class),
+      l_weld: m === 'Cantilever' && fx === 'Weld top' ? pos('l_weld') / 1000 : 1,
+      con_stage: m === 'Plate' && s.con_stage && wallSB(s) ? 1 : 0, orientation: s.orientation,
+      sb_load: slabSB(s) ? 'Slab' : 'Masonry', mb_load: slabMB(s) ? 'Slab' : 'Masonry',
+    };
+    const direct = (which, kG, kQ, where) => {
+      const read = (k, kind) => (s[k] || []).map((r, i) => {
+        const w = Number(r.w);
+        if (!Number.isFinite(w)) errs.push(`${where}, ${kind} load ${i + 1}: enter a number.`);
+        return { label: String(r.label || '').trim(), w };
+      });
+      const G = read(kG, 'dead'), Q = read(kQ, 'imposed');
+      p = SMS.direct.apply(p, which, { G: G.map(r => r.w), Q: Q.map(r => r.w) });   // kN/m = N/mm
+      p['direct_' + which] = { G, Q };
+    };
+    if (dSB) direct('sb', 'G_sb', 'Q_sb', 'Load on the support member');
+    if (dMB) direct('mb', 'G_mb', 'Q_mb', 'Load on the torsion beam');
+    if (p.sb_load === 'Slab') Object.assign(p, { PG_ssb: num('PG_ssb'), PQ_ssb: num('PQ_ssb'), d_ssb: num('d_ssb') });
+    if (p.mb_load === 'Slab') Object.assign(p, { PG_smb: num('PG_smb'), PQ_smb: num('PQ_smb'), d_smb: num('d_smb'), e2: num('e2') });
+    if (tor && m === 'Cantilever') p.h_bf = num('h_bf');
+    const sls = () => ({                                     // switched-off SLS checks keep their (hidden) limits
+      twist_on: s.twist_on ? 1 : 0, defl_on: s.defl_on ? 1 : 0, twist_check: s.twist_check,
+      phi_lim: s.twist_check === 'Lever' ? 1 : s.twist_on ? pos('phi_lim') : (Number(s.phi_lim) || 1),
+      k_delta: s.defl_on ? pos('k_delta') : (Number(s.k_delta) || 360), d_lim_abs: s.defl_on ? pos('d_lim_abs') : (Number(s.d_lim_abs) || 3),
+      d_add: s.defl_on ? num('d_add') : 0,
+    });
+    if (m === 'Plate') Object.assign(p, { lh: pos('lh'), lplate: pos('lplate'), tsb: pos('tsb') });
+    else if (m === 'Cantilever') {
+      if (angUser(s)) {
+        const D0 = pos('ang_D'), B0 = pos('ang_B'), t = pos('ang_t'), r1 = num('ang_r1'), r2 = num('ang_r2');
+        const D = Math.max(D0, B0), B = Math.min(D0, B0), g = SMS.sections.angle(D, B, t, r1, r2);
+        p.angle = { name: `User angle ${f(D, 0)}x${f(B, 0)}x${f(t, 1)}`, D, B, t, r1, r2, A: g.A, cyy: g.cy, cx: g.cx };
+      } else {
+        const a = angleRec(s);
+        if (!a) errs.push('Choose an angle.');
+        else p.angle = { name: a.name, D: a.D, B: a.B, t: a.t, r1: a.r1, r2: a.r2, A: a.A, cyy: a.cy, cx: a.cx };
+      }
+      if (!unequal(s)) p.orientation = 'Long';
+    } else Object.assign(p, { lh: pos('ss_lh'), lv: pos('ss_lv'), tsb: pos('ss_t'), r1sb: num('ss_r1') });
+    if (fx === 'Bolt') Object.assign(p, { Bbolt: pos('Bbolt'), eb: pos('eb'), bolt_grade: s.bolt_grade, bolt_size: s.bolt_size });
+    if (m === 'SCI' && fx === 'Bolt' && (p.Bbolt < 300 || p.Bbolt > 1200)) errs.push('Bolt spacing must be 300–1200 mm for the stainless angle.');
+    if (tor && isEC(s)) {
+      // Eurocode: the beam comes from beam-v03's library; its properties are filled in by EC3MS.run
+      if (!EC3MS.find(s.mb_family, s.mb_name)) errs.push('Choose a torsion beam section from the Eurocode library.');
+      Object.assign(p, {
+        mb: null, grade_mb: s.grade_mb, L: pos('L'), LLT: pos('LLT'), K_LT: 1, mLT: 1, Mx_add: 0, Fv_add: 0, warping: s.warping,
+        mirror: s.mirror === 'mirror' && mbType(s) === 'C',
+      }, sls());
+      if (s.twist_check === 'Lever') Object.assign(p, s.twist_on ? { h_d: pos('h_d'), d_h_lim: pos('d_h_lim') } : { h_d: Number(s.h_d) || 100, d_h_lim: Number(s.d_h_lim) || 2 });
+      if (s.sb_method === 'SCI') { const g = pos('gm0ss'); if (g < 1) errs.push('Stainless γM0 should not be below 1.0.'); }
+    } else if (tor) {
+      let mb;
+      if (mbUser(s)) {
+        const D = pos('mb_D'), B = pos('mb_B'), t = pos('mb_t');
+        if (s.mb_family === 'userHR') mb = Object.assign(SMS.sections.rhsHot(D, B, t), { name: `User RHS ${f(D, 0)}x${f(B, 0)}x${f(t, 1)}` });
+        else {
+          const T = pos('mb_T'), r = num('mb_r');
+          mb = s.mb_family === 'userC' ? Object.assign(SMS.sections.channel(D, B, t, T, r), { name: `User channel ${f(D, 0)}x${f(B, 0)}` })
+            : Object.assign(SMS.sections.iSection(D, B, t, T, r), { name: `User I-section ${f(D, 0)}x${f(B, 0)}` });
+          if (2 * T >= D || t >= B) errs.push('Section dimensions are not consistent (check T against D and t against B).');
+        }
+        mb.source = 'calculated from dimensions';
+      } else {
+        mb = mbFromCat(s.mb_family, s.mb_name);
+        if (!mb) errs.push('Choose a torsion beam section.');
+        else mb.source = 'section tables';
+      }
+      Object.assign(p, {
+        mb, grade_mb: s.grade_mb, L: pos('L'), LLT: pos('LLT'), K_LT: s.klt_override ? pos('K_LT') : autoKLT(s),
+        restraint: s.restraint, destab: !!s.destab,
+        mLT: pos('mLT'), Mx_add: num('Mx_add') * 1e6, Fv_add: num('Fv_add') * 1e3, warping: s.warping,
+        mirror: s.mirror === 'mirror' && mb && mb.type === 'C',
+      }, sls());
+      if (s.twist_check === 'Lever') Object.assign(p, s.twist_on ? { h_d: pos('h_d'), d_h_lim: pos('d_h_lim') } : { h_d: Number(s.h_d) || 100, d_h_lim: Number(s.d_h_lim) || 2 });
+    }
+    // validation of the geometry
+    if (!errs.length) {
+      const b = bearing(s), two3 = 2 / 3 * p.b_msb;
+      if (m !== 'SCI' && (p.e1 < 0 || p.e1 > b.lh)) errs.push(`e1 = ${f(p.e1, 1)} mm lies outside the horizontal leg (0 to ${f(b.lh, 0)} mm).`);
+      if (b.dm <= 0) errs.push(`The support does not reach the outer leaf: bearing dm = ${f(b.dm, 1)} mm.`);
+      else if (b.dm < two3 && p.sb_load !== 'Slab') {
+        if (m === 'Plate') warns.push(`Bearing dm = ${f(b.dm, 1)} mm is less than 2/3 of the leaf width (${f(two3, 1)} mm). The method accepts this for plates but not for angles (Engineering notes F13).`);
+        else warns.push(`Geometry outside the method: bearing dm = ${f(b.dm, 1)} mm is less than 2/3 of the leaf width (${f(two3, 1)} mm).`);
+      }
+      if (fx === 'Bolt') { const d = Number(p.bolt_size.slice(1)); if (p.eb < 1.25 * d) warns.push(`Minimum: top of angle to bolt e_b ≥ 1.25d = ${f(1.25 * d, 1)} mm.`); }
+      if ((m === 'Plate' || m === 'SCI') && (p.lh < 100 || p.lh > 200)) warns.push(`l_h = ${f(p.lh, 0)} mm is outside the 100–200 mm range the method covers.`);
+      if (m === 'Plate' && p.lplate <= p.lh) errs.push('The plate must extend under the beam: l_plate must exceed l_h.');
+      if (m === 'Cantilever' && fx === 'Weld top' && p.l_weld > 1) errs.push('Weld length per metre cannot exceed 1000 mm/m.');
+    }
+    return { p, errs, warns };
+  }
+
+  function pToForm(p) {
+    const keep = ['project', 'jobref', 'calcby', 'company', 'address', 'section', 'calcdate', 'chkby', 'chkdate', 'appby', 'appdate', 'paper', 'code', 'zg_inner', 'gm0ss'];
+    const s = Object.assign({}, DEFAULTS, Object.fromEntries(keep.map(k => [k, st[k]])));
+    Object.assign(s, {
+      design_method: p.design_method, sb_method: p.sb_method, fixing: p.fixing, con_stage: !!p.con_stage,
+      gG: p.gG, gQ: p.gQ, gmss: p.gmss || 1, c: r6(p.c), e_mb: r6(p.e_mb || 0), shim: r6(p.shim || 0),
+      b_msb: r6(p.b_msb), h_msb: r6(p.h_msb), rho_sb: r6(p.rho_m_sb * 1e6), PGadd_sb: r6(p.PGadd_sb), PQadd_sb: r6(p.PQadd_sb),
+      e1: r6(p.e1), s_weld: r6(p.s_weld), weld_class: String(p.weld_class), l_weld: r6(p.l_weld * 1000), orientation: p.orientation || 'Long',
+      sb_load: p.sb_load || 'Masonry', mb_load: p.mb_load || 'Masonry', h_bf: r6(p.h_bf || 0),
+    });
+    if (p.sb_load === 'Slab') Object.assign(s, { PG_ssb: r6(p.PG_ssb), PQ_ssb: r6(p.PQ_ssb), d_ssb: r6(p.d_ssb) });
+    if (p.mb_load === 'Slab') Object.assign(s, { PG_smb: r6(p.PG_smb), PQ_smb: r6(p.PQ_smb), d_smb: r6(p.d_smb), e2: r6(p.e2) });
+    if (p.sb_method === 'Plate') Object.assign(s, { lh: r6(p.lh), lplate: r6(p.lplate), tsb: r6(p.tsb), grade_sb: p.grade_sb });
+    else if (p.sb_method === 'Cantilever') {
+      const fam = findAngle(p.angle.name);
+      if (fam) Object.assign(s, { angle_family: fam, angle_name: p.angle.name });
+      else Object.assign(s, { angle_family: 'user', ang_D: p.angle.D, ang_B: p.angle.B, ang_t: p.angle.t, ang_r1: p.angle.r1, ang_r2: p.angle.r2 });
+      s.grade_sb = p.grade_sb;
+    } else Object.assign(s, { ss_lh: r6(p.lh), ss_lv: r6(p.lv), ss_t: r6(p.tsb), ss_r1: r6(p.r1sb), grade_ss: p.grade_sb });
+    if (p.fixing === 'Bolt') Object.assign(s, { Bbolt: r6(p.Bbolt), eb: r6(p.eb), bolt_grade: p.bolt_grade, bolt_size: p.bolt_size });
+    if (p.mb) {
+      const fam = findSection(p.mb.name);
+      if (fam) Object.assign(s, { mb_family: fam, mb_name: p.mb.name });
+      else Object.assign(s, { mb_family: { C: 'userC', I: 'userI', HR: 'userHR' }[p.mb.type], mb_D: r6(p.mb.D), mb_B: r6(p.mb.B), mb_t: r6(p.mb.t), mb_T: r6(p.mb.T), mb_r: r6(p.mb.r) });
+      // restraint row: as stored (restraint code of the benchmark data), else the first Table 13 row giving K_LT
+      const k = p.K_LT, eq = (a, b) => Math.abs(a - b) < 1e-9;
+      let rr = TABLE13[p.restraint] ? [p.restraint, !!p.destab] : null;
+      if (!rr) for (const col of [1, 2]) { const row = Object.entries(TABLE13).find(([, v]) => eq(v[col], k)); if (row) { rr = [row[0], col === 2]; break; } }
+      if (rr && eq(TABLE13[rr[0]][rr[1] ? 2 : 1], k)) Object.assign(s, { restraint: rr[0], destab: rr[1], klt_override: false });
+      else Object.assign(s, { restraint: rr ? rr[0] : 'both_free', destab: rr ? rr[1] : false, klt_override: true, K_LT: k });
+      Object.assign(s, {
+        b_mmb: r6(p.b_mmb), h_mmb: r6(p.h_mmb), rho_mb: r6(p.rho_m_mb * 1e6), PGadd_mb: r6(p.PGadd_mb), PQadd_mb: r6(p.PQadd_mb),
+        grade_mb: p.grade_mb, L: r6(p.L), LLT: r6(p.LLT), mLT: p.mLT, Mx_add: r6(p.Mx_add / 1e6), Fv_add: r6(p.Fv_add / 1e3),
+        warping: p.warping, twist_check: p.twist_check, phi_lim: p.phi_lim, k_delta: p.k_delta, d_lim_abs: r6(p.d_lim_abs), d_add: r6(p.d_add),
+        twist_on: p.twist_on !== 0, defl_on: p.defl_on !== 0,
+      });
+      if (p.twist_check === 'Lever') Object.assign(s, { h_d: r6(p.h_d), d_h_lim: r6(p.d_h_lim) });
+    }
+    return s;
+  }
+  const plain = s => s.replace(/_\{([^}]*)\}/g, '$1').replace(/_([A-Za-z0-9])/g, '$1');
+  // "dead 4.00 (Outer leaf masonry) + 1.50 (lintel) = 5.50 kN/m; imposed none" for the calculation sheet
+  function directText(d) {
+    const part = (name, rows) => !rows.length ? `${name} none`
+      : `${name} ${rows.map(r => f(r.w, 2) + (r.label ? ` (${r.label.replace(/[_^]/g, ' ')})` : '')).join(' + ')}${rows.length > 1 ? ` = ${f(loadSum(rows), 2)}` : ''} kN/m`;
+    return `${part('dead', d.G)}; ${part('imposed', d.Q)}`;
+  }
+
+  // ------------------------------------------------------------------ checks (as reported, same limits)
+  function checkList(p, o) {
+    const L = [], u = o.util_sb, tor = p.design_method === 'Masonry support and torsion';
+    const add = (name, ref, val) => L.push({ name, ref, u: val });
+    if (p.sb_method === 'Plate') {
+      add('Plate: bending at heel', 'M_{c} = 1.2 p_{y} Z', u.heel);
+      if ('transverse' in u) add('Plate: biaxial stress ratio', 'SCI P110, α_{ls} ≤ α_{ts}', u.transverse);
+      add('Plate: deflection at toe', 'δ ≤ 2 mm', u.toe);
+      add('Plate: weld to beam', 'BS 5950 Table 37', u.weld);
+      if (p.con_stage) {
+        add('Construction: bending at heel', '1.2 m high wall', u.heel_c);
+        if ('transverse_c' in u) add('Construction: stress ratio', 'α_{lsc} ≤ α_{ts}', u.transverse_c);
+        add('Construction: deflection at toe', 'δ_{c} ≤ 2 mm', u.toe_c);
+      }
+    } else {
+      const nm = p.sb_method === 'SCI' ? 'Stainless angle' : 'Angle';
+      add(`${nm}: stress at heel`, p.sb_method === 'SCI' ? 'SCI P157, σ ≤ Y_{0.2}/γ_{m,ss}' : 'σ ≤ p_{y}', u.heel);
+      add(`${nm}: deflection at toe`, `δ ≤ ${f(o.delta_lim, 2)} mm`, u.toe);
+      if ('bolt' in u) { add('Bolt: shear and tension', 'BS 5950 cl. 6.3', u.bolt); add('Bolt: combined', 'F_{s}/P_{s} + F_{t}/P_{t} ≤ 1.4', u.bolt_comb); }
+      else add('Angle: weld', 'BS 5950 Table 37', u.weld);
+    }
+    if (tor) {
+      const x = o.util, hr = p.mb.type === 'HR';
+      if (o.slender) { add('Beam: section class', 'slender: beyond the scope of the method', x.scope); return L; }
+      add('Beam: shear', 'BS 5950 cl. 4.2.3', x.shear);
+      add('Beam: moment', o.highShear ? 'BS 5950 cl. 4.2.5.3' : 'BS 5950 cl. 4.2.5.2', x.moment);
+      if (!hr) add('Beam: lateral-torsional buckling', 'BS 5950 cl. 4.3.6', x.LTB);
+      add('Beam: bending + torsion buckling', 'SCI P057 section 2.3', x.buckling_ib);
+      add('Beam: local capacity', 'SCI P057 eq. 2.22', x.local);
+      add('Beam: combined shear stress', 'SCI P057 section 2.3', x.shear_stress);
+      if ('twist' in x) add(p.twist_check === 'Lever' ? 'Twist: movement at lever arm (SLS)' : 'Twist (SLS)', p.twist_check === 'Lever' ? `δ_{h} ≤ ${f(p.d_h_lim, 1)} mm` : `φ ≤ ${f(p.phi_lim, 2)}°`, x.twist);
+      if ('deflection' in x) add('Beam: deflection (SLS)', `min(L/${f(p.k_delta, 0)}, ${f(p.d_lim_abs, 1)} mm)`, x.deflection);
+    }
+    return L;
+  }
+
+  // ------------------------------------------------------------------ form rendering
+  const form = $('form');
+  // section and angle lists, smallest first (the beam-v03 library lists the I and C sections largest first)
+  const sizeOf = name => (String(name).match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  const bySize = (a, b) => { const x = sizeOf(a), y = sizeOf(b); for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+  const mbNames = () => (isEC(st) ? EC3MS.list(st.mb_family) : CAT[st.mb_family] || []).map(x => x.name).sort(bySize);
+  const angNames = () => (CAT[st.angle_family] || []).map(x => x.name).sort(bySize);
+  const lastPick = {};                                                  // last section / angle chosen per type
+  // the list member nearest in size to the previous choice (depth first, then the lightest), else the middle one
+  function nearest(names, prev) {
+    if (!names.length) return '';
+    const d0 = sizeOf(prev)[0];
+    if (!Number.isFinite(d0)) return names[Math.floor(names.length / 2)];
+    return names.slice().sort((a, b) => Math.abs(sizeOf(a)[0] - d0) - Math.abs(sizeOf(b)[0] - d0) || bySize(a, b))[0];
+  }
+  function optionsFor(fd) {
+    if (fd.key === 'mb_family' && isEC(st)) return MB_FAM.filter(([k]) => !k.startsWith('user'));
+    if (fd.opt === 'dyn-mb') return mbNames().map(n => [n, n]);
+    if (fd.opt === 'dyn-ang') return angNames().map(n => [n, n]);
+    return fd.opt;
+  }
+  function fillSelect(sel, opts, val) {
+    sel.textContent = '';
+    for (const [v, t] of opts) { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.append(o); }
+    if (opts.some(o => o[0] === val)) sel.value = val;
+    tip(sel);
+  }
+  // a select shows its whole choice as a tooltip (long names can still be cut in a narrow box)
+  const tip = sel => { sel.title = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex].text : ''; };
+  function buildForm() {
+    for (const g of GROUPS) {
+      const det = document.createElement('details');
+      det.className = 'grp'; det.id = g.id; det.open = g.open;
+      const sum = document.createElement('summary'); sum.textContent = g.title; det.append(sum);
+      const box = document.createElement('div'); box.className = 'fields'; det.append(box);
+      for (const fd of g.fields) {
+        const d = FIELD[fd[0]], row = document.createElement('div'), id = 'in-' + d.key;
+        row.dataset.k = d.key;
+        const lab = document.createElement('label'); lab.htmlFor = id; lab.innerHTML = mk(d.label);
+        let inp = null;
+        if (d.kind === 'loads') {                              // a list of line loads: description + kN/m, add / remove
+          row.className = 'f loads';
+          const head = document.createElement('div'); head.className = 'lhead'; head.textContent = `${d.label}, ${d.opt}`;
+          d.list = document.createElement('div'); d.list.className = 'llist';
+          const foot = document.createElement('div'); foot.className = 'lfoot';
+          const add = document.createElement('button'); add.type = 'button'; add.className = 'btn';
+          add.dataset.act = 'add-load'; add.dataset.list = d.key; add.textContent = `+ Add ${d.extra.what}`;
+          d.total = document.createElement('span'); d.total.className = 'ltotal';
+          foot.append(add, d.total);
+          row.append(head, d.list, foot);
+        } else if (d.kind === 'num') {
+          row.className = 'f';
+          inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.inputMode = 'decimal';
+          const u = document.createElement('span'); u.className = 'u'; u.textContent = d.opt || '';
+          row.append(lab, inp, u);
+        } else if (d.kind === 'chk') {
+          row.className = 'f chk';
+          inp = document.createElement('input'); inp.type = 'checkbox';
+          row.append(inp, lab);
+        } else if (d.kind === 'txt') {
+          row.className = 'f txt';
+          inp = document.createElement('input'); inp.type = 'text';
+          row.append(lab, inp);
+        } else {
+          row.className = d.kind === 'stack' ? 'f stack' : 'f sel';
+          inp = document.createElement('select');
+          row.append(lab, inp);
+        }
+        if (inp) { inp.id = id; inp.name = d.key; }
+        if (d.extra.e1hint || d.extra.klt) { const h = document.createElement('div'); h.className = 'hint'; h.id = 'hint-' + d.key; row.append(h); }
+        box.append(row);
+        d.row = row; d.input = inp;
+      }
+      form.append(det);
+      g.el = det;
+    }
+    form.addEventListener('input', onInput);
+    form.addEventListener('change', onInput);
+    form.addEventListener('click', e => {
+      const b = e.target.closest('button[data-act]');
+      if (!b) return;
+      e.preventDefault();
+      if (b.dataset.act === 'use-e1') { st.e1 = Number(b.dataset.v); writeForm(); update(); }
+      else if (b.dataset.act === 'add-load' || b.dataset.act === 'del-load') {
+        const k = b.dataset.list, rows = st[k] || (st[k] = []);
+        if (b.dataset.act === 'add-load') rows.push({ label: '', w: 0 }); else rows.splice(Number(b.dataset.i), 1);
+        renderLoads(FIELD[k]); syncForm(); $('preset').value = ''; schedule();
+        if (b.dataset.act === 'add-load') { const el = $(`in-${k}-${rows.length - 1}`); if (el) { el.focus(); el.select(); } }
+      }
+    });
+    form.addEventListener('submit', e => e.preventDefault());
+  }
+  // one row per load: description, value, unit, remove. Rebuilt on add / remove / load-type change, never while typing.
+  function renderLoads(d) {
+    const rows = st[d.key] || [];
+    d.list.textContent = '';
+    rows.forEach((r, i) => {
+      const el = document.createElement('div'); el.className = 'lrow';
+      const tag = (inp, fld) => { inp.dataset.list = d.key; inp.dataset.i = String(i); inp.dataset.f = fld; };
+      const lb = document.createElement('input'); lb.type = 'text'; lb.id = `in-${d.key}-${i}-label`; lb.value = r.label || '';
+      lb.placeholder = 'Description'; lb.setAttribute('aria-label', `${d.label} ${i + 1}: description`); tag(lb, 'label');
+      const w = document.createElement('input'); w.type = 'number'; w.step = 'any'; w.inputMode = 'decimal'; w.id = `in-${d.key}-${i}`;
+      w.value = Number.isFinite(Number(r.w)) && r.w !== '' ? String(r.w) : ''; w.setAttribute('aria-label', `${d.label} ${i + 1}, ${d.opt}`); tag(w, 'w');
+      const u = document.createElement('span'); u.className = 'u'; u.textContent = d.opt;
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'btn del'; del.textContent = '×';
+      del.dataset.act = 'del-load'; del.dataset.list = d.key; del.dataset.i = String(i); del.setAttribute('aria-label', `Remove ${d.extra.what} ${i + 1}`);
+      el.append(lb, w, u, del); d.list.append(el);
+    });
+    if (!rows.length) { const e = document.createElement('div'); e.className = 'lempty'; e.textContent = `No ${d.extra.what}.`; d.list.append(e); }
+  }
+  // totals under each list; for dead loads also the leaf height of the same weight (the wall the load stands for)
+  function loadTotals() {
+    for (const d of Object.values(FIELD)) {
+      if (d.kind !== 'loads' || d.row.hidden) continue;
+      const rows = st[d.key] || [], tot = loadSum(rows);
+      d.list.querySelectorAll('input[type=number]').forEach((el, i) => el.classList.toggle('bad', !rows[i] || !Number.isFinite(Number(rows[i].w))));
+      if (!Number.isFinite(tot)) { d.total.textContent = 'Total: enter every value'; continue; }
+      let t = `Total ${f(tot, 2)} ${d.opt}`;
+      if (d.extra.wall) {
+        const b = Number(st[d.extra.wall[0]]), rho = Number(st[d.extra.wall[1]]);
+        if (b > 0 && rho > 0 && tot > 0) t += ` = a ${f(b, 0)} mm leaf ${f(SMS.direct.height(tot, b, rho * 1e-6), 0)} mm high at ${f(rho, 1)} kN/m³`;
+      }
+      d.total.textContent = t;
+    }
+  }
+  function writeForm() {
+    initDirect(st);
+    for (const d of Object.values(FIELD)) {
+      if (d.kind === 'loads') { renderLoads(d); continue; }
+      const inp = d.input;
+      if (inp.tagName === 'SELECT') fillSelect(inp, optionsFor(d), st[d.key]);
+      else if (inp.type === 'checkbox') inp.checked = !!st[d.key];
+      else if (document.activeElement !== inp) inp.value = st[d.key] === undefined ? '' : String(st[d.key]);
+    }
+    syncForm();
+  }
+  function syncForm() {
+    for (const g of GROUPS) g.el.hidden = g.show ? !g.show(st) : false;
+    for (const d of Object.values(FIELD)) d.row.hidden = d.show ? !d.show(st) : false;
+    const k = FIELD.K_LT.input;
+    k.disabled = !st.klt_override;
+    if (!st.klt_override) { st.K_LT = autoKLT(st); if (document.activeElement !== k) k.value = String(st.K_LT); }
+    $('hint-K_LT').textContent = st.klt_override ? `Table 13 value would be ${autoKLT(st)}.` : 'From Table 13 and the destabilising-load box.';
+    const h = $('hint-e1');
+    const b = (() => { try { return bearing(st); } catch (e) { return null; } })();
+    h.textContent = '';
+    if (b && Number.isFinite(b.cl)) {
+      const span = document.createElement('span'); span.textContent = `Bearing centreline: ${f(b.cl, 1)} mm from the heel.`; h.append(span);
+      if (Math.abs(b.cl - Number(st.e1)) > 0.05) {
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn'; btn.dataset.act = 'use-e1';
+        btn.dataset.v = String(r6(b.cl)); btn.textContent = `Use ${f(b.cl, 1)}`; h.append(btn);
+      }
+    }
+    for (const d of Object.values(FIELD)) if (d.kind === 'num') d.input.classList.toggle('bad', !d.row.hidden && !Number.isFinite(Number(st[d.key])));
+    loadTotals();
+  }
+  function onInput(e) {
+    const t = e.target, k = t.name;
+    if (t.dataset && t.dataset.list) {                       // a row of a direct-load list
+      const r = (st[t.dataset.list] || [])[Number(t.dataset.i)];
+      if (!r) return;
+      if (t.dataset.f === 'w') r.w = t.value.trim() === '' ? NaN : Number(t.value); else r.label = t.value;
+      syncForm(); $('preset').value = ''; schedule();
+      return;
+    }
+    if (!k || !(k in FIELD)) return;
+    if (t.tagName === 'SELECT') tip(t);
+    if (k === 'mb_family') lastPick[st.mb_family] = st.mb_name;          // remember the section of the type left
+    if (k === 'angle_family') lastPick[st.angle_family] = st.angle_name;
+    const d = FIELD[k];
+    if (d.kind === 'num') st[k] = t.value.trim() === '' ? NaN : Number(t.value);
+    else if (d.kind === 'chk') st[k] = t.checked;
+    else st[k] = t.value;
+    if (e.type === 'change' && (k === 'mb_family' || k === 'angle_family' || k === 'sb_method' || k === 'design_method' || k === 'code' || k === 'sb_load' || k === 'mb_load')) {
+      if (k === 'code') {
+        const bs = [1.4, 1.6], ec = [1.35, 1.5], [from, to] = isEC(st) ? [bs, ec] : [ec, bs];
+        if (+st.gG === from[0] && +st.gQ === from[1]) { st.gG = to[0]; st.gQ = to[1]; }
+      }
+      if (k === 'mb_family' || k === 'code') fixSection();
+      if (k === 'angle_family' && !angUser(st)) { const l = angNames(); if (l.length && !l.includes(st.angle_name)) st.angle_name = l.includes(lastPick[st.angle_family]) ? lastPick[st.angle_family] : nearest(l, st.angle_name); }
+      writeForm();
+    } else syncForm();
+    $('preset').value = '';
+    schedule();
+  }
+  // keep the torsion-beam choice valid for the active code (section catalogue for BS, beam-v03 library for EC)
+  function fixSection() {
+    if (isEC(st)) {
+      if (mbUser(st)) st.mb_family = 'UKPFC';
+      const hit = EC3MS.find(st.mb_family, st.mb_name), back = EC3MS.find(st.mb_family, lastPick[st.mb_family] || '');
+      st.mb_name = hit ? hit.name : back ? back.name : nearest(mbNames(), st.mb_name);
+    } else if (!mbUser(st)) {
+      const l = CAT[st.mb_family] || [];
+      if (l.length && !l.some(x => x.name === st.mb_name)) {
+        const h = l.find(x => normName(x.name) === normName(st.mb_name)), back = l.find(x => x.name === lastPick[st.mb_family]);
+        st.mb_name = h ? h.name : back ? back.name : nearest(mbNames(), st.mb_name);
+      }
+    }
+  }
+  let timer = 0;
+  function schedule() { clearTimeout(timer); timer = setTimeout(update, isEC(st) ? 150 : 60); }
+
+  // ------------------------------------------------------------------ results
+  let lastP = null, lastO = null;
+  function update() {
+    const { p, errs, warns } = formToP(st);
+    if (isEC(st)) return updateEC(p, errs, warns);
+    const msgs = errs.map(t => ['err', t]).concat(warns.map(t => ['warn', t]));
+    if (p.direct_sb || p.direct_mb) msgs.push(['info', 'Direct loads: the calculation sheet lists each load and its totals G and Q in place of the leaf height and density, and uses the totals in the formulas; the results are those of a wall of the same weight.']);
+    if (p.mirror) msgs.push(['info', 'Mirrored channel: the method is applied with the shear centre on the inner side (levers + B − t + 2e_{0}).']);
+    let o = null;
+    if (!errs.length) {
+      try { o = SMS.calc(p); } catch (e) { msgs.unshift(['err', `The calculation stopped: ${e.message}`]); }
+    }
+    $('msgs').innerHTML = msgs.map(([c, t]) => `<div class="msg ${c}">${mk(t)}</div>`).join('');
+    if (!o) {
+      $('verdict').className = 'verdict na';
+      $('verdict').innerHTML = '<div class="state">Waiting</div><div><h2>Fix the inputs above to see results</h2></div>';
+      return;
+    }
+    lastP = p; lastO = o;
+    const checks = checkList(p, o);
+    renderVerdict(p, o, checks);
+    renderUtil(checks);
+    renderDrawing(p, o);
+    renderCalcSheet(p, o);
+    renderSection(p, o);
+    renderNotes(p, o);
+  }
+
+  function state(u) { return !Number.isFinite(u) ? 'na' : u <= 1 ? 'ok' : 'ng'; }
+  function renderVerdict(p, o, checks, keys) {
+    const bad = checks.filter(c => state(c.u) === 'ng'), na = checks.filter(c => state(c.u) === 'na');
+    const gov = checks.filter(c => Number.isFinite(c.u)).reduce((a, c) => (!a || c.u > a.u ? c : a), null);
+    const v = $('verdict');
+    if (na.length) {
+      v.className = 'verdict na';
+      v.innerHTML = `<div class="state">Incomplete</div><div><h2>${na.length} check${na.length > 1 ? 's' : ''} could not be completed</h2><p>${esc(na.map(c => c.name).join(', '))}. See the calculation sheet.</p></div>`;
+    } else if (bad.length) {
+      v.className = 'verdict ng';
+      v.innerHTML = `<div class="state">Fails</div><div><h2>${bad.length} of ${checks.length} checks fail</h2><p>${bad.map(c => `${esc(c.name)} <b>${f(c.u, 2)}</b>`).join(' · ')}</p></div>`;
+    } else {
+      v.className = 'verdict ok';
+      v.innerHTML = `<div class="state">Passes</div><div><h2>All ${checks.length} checks pass</h2><p>Governing: ${esc(gov.name)}, utilisation <b>${f(gov.u, 3)}</b></p></div>`;
+    }
+    const tor = p.design_method === 'Masonry support and torsion', K = keys || [];
+    if (keys) { $('keys').innerHTML = K.map(([a, b]) => `<div><dt>${mk(a)}</dt><dd>${b}</dd></div>`).join(''); return; }
+    K.push([p.sb_load === 'Slab' ? 'Slab edge load P₁ (ULS)' : 'Outer leaf load P₁ (ULS)', f(o.P1, 2) + ' kN/m']);
+    if (tor) {
+      K.push(['Torque T_q (ULS)', f(o.Tq / 1e6, 2) + ' kNm']);
+      if (o.slender) K.push(['Section class', 'Slender']);
+      else {
+        K.push(['Twist φ (SLS)', f(o.phi_sls_deg, 2) + '°']);
+        K.push(['Deflection δ_y (SLS)', f(o.dy, 2) + ' mm']);
+        K.push(['Interaction i_b', f(o.ib, 3)]);
+      }
+    } else {
+      K.push(['Stress at heel', f(o.sigma_heel, 1) + ' N/mm²']);
+      K.push(['Toe deflection', f(o.delta_toe, 2) + ' mm']);
+    }
+    $('keys').innerHTML = K.map(([a, b]) => `<div><dt>${mk(a)}</dt><dd>${b}</dd></div>`).join('');
+  }
+
+  function renderUtil(checks) {
+    const rows = checks.map(c => {
+      const s = state(c.u), w = Number.isFinite(c.u) ? Math.min(c.u / 1.25, 1) * 100 : 0;
+      const cls = !Number.isFinite(c.u) ? '' : c.u > 1 ? 'over' : c.u > 0.9 ? 'near' : '';
+      return `<tr><td>${esc(c.name)}<span class="ref">${mk(c.ref)}</span></td><td style="width:26%"><div class="bar ${cls}"><i style="width:${w.toFixed(1)}%"></i></div></td>` +
+        `<td class="n">${f(c.u, 3)}</td><td><span class="res ${s}">${s === 'ok' ? 'PASS' : s === 'ng' ? 'FAIL' : 'N/A'}</span></td></tr>`;
+    }).join('');
+    $('util').innerHTML = `<thead><tr><th>Check</th><th>Utilisation</th><th class="n">Ratio</th><th>Result</th></tr></thead><tbody>${rows}</tbody>`;
+  }
+
+  // ------------------------------------------------------------------ cross-section drawing (x outward to the cavity, y up from the beam soffit)
+  function renderDrawing(p, o) {
+    const tor = p.design_method === 'Masonry support and torsion', m = p.sb_method, s = p.fixing === 'Bolt' ? p.shim : 0;
+    const back = [], mid = [], front = [];
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    const ext = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+    const P = (x, y) => `${x.toFixed(2)},${(-y).toFixed(2)}`;
+    const poly = (pts, cls, layer = mid) => { pts.forEach(q => ext(q[0], q[1])); layer.push(`<polygon class="${cls}" points="${pts.map(q => P(q[0], q[1])).join(' ')}"/>`); };
+    const rect = (xa, ya, xb, yb, cls, layer) => poly([[xa, ya], [xb, ya], [xb, yb], [xa, yb]], cls, layer);
+    let D = 0, B = 0, xsc = 0, ysc = 0;
+    if (tor) {
+      const mb = p.mb, t = mb.t, T = mb.T;
+      D = mb.D; B = mb.B;
+      if (mb.type === 'C' && p.mirror) { poly([[-B, 0], [0, 0], [0, T], [-B + t, T], [-B + t, D - T], [0, D - T], [0, D], [-B, D]], 'stl'); xsc = -B + t / 2 - o.e0mb; }
+      else if (mb.type === 'C') { poly([[0, 0], [-B, 0], [-B, T], [-t, T], [-t, D - T], [-B, D - T], [-B, D], [0, D]], 'stl'); xsc = -t / 2 + o.e0mb; }
+      else if (mb.type === 'I') {
+        const a = -B / 2 - t / 2, b = -B / 2 + t / 2;
+        poly([[-B, 0], [0, 0], [0, T], [b, T], [b, D - T], [0, D - T], [0, D], [-B, D], [-B, D - T], [a, D - T], [a, T], [-B, T]], 'stl'); xsc = -B / 2;
+      } else {
+        ext(-B, 0); ext(0, D);
+        mid.push(`<path class="stl" fill-rule="evenodd" d="M${P(-B, 0)} L${P(0, 0)} L${P(0, D)} L${P(-B, D)} Z M${P(-B + t, t)} L${P(-t, t)} L${P(-t, D - t)} L${P(-B + t, D - t)} Z"/>`);
+        xsc = -B / 2;
+      }
+      ysc = D / 2;
+    }
+    let heel = 0, toe = 0, ybear = 0, lv = 0;
+    if (m === 'Plate') { rect(-(p.lplate - p.lh), -p.tsb, p.lh, 0, 'stl'); toe = p.lh; }
+    else {
+      let lh, t, r = 0;
+      if (m === 'Cantilever') { const lg = (p.orientation || 'Long') === 'Long'; lh = lg ? p.angle.D : p.angle.B; lv = lg ? p.angle.B : p.angle.D; t = p.angle.t; }
+      else { lh = p.lh; lv = p.lv; t = p.tsb; r = p.r1sb; }
+      heel = s; toe = s + lh; ybear = t;
+      if (!tor) rect(-70, -60, 0, Math.max(lv, 150) + 170, 'wall', back);
+      if (r > 0) {
+        const R = r + t, pts = [[s, lv]], n = 10;
+        for (let i = 0; i <= n; i++) { const a = Math.PI + i / n * Math.PI / 2; pts.push([s + R + R * Math.cos(a), R + R * Math.sin(a)]); }
+        pts.push([s + lh, 0], [s + lh, t]);
+        for (let i = 0; i <= n; i++) { const a = 1.5 * Math.PI - i / n * Math.PI / 2; pts.push([s + R + r * Math.cos(a), R + r * Math.sin(a)]); }
+        pts.push([s + t, lv]);
+        poly(pts, 'stl');
+      } else poly([[s, 0], [s + lh, 0], [s + lh, t], [s + t, t], [s + t, lv], [s, lv]], 'stl');
+      if (s > 0) rect(0, 0, s, lv, 'shim');
+      if (p.fixing === 'Bolt') {
+        const d = Number(p.bolt_size.slice(1)), yb = lv - p.eb;
+        rect(tor ? -Math.min(30, B * 0.3) : -40, yb - d / 2, s + t + 0.9 * d, yb + d / 2, 'bolt', front);
+      }
+    }
+    const emb = tor ? p.e_mb : 0, xo = p.c - emb, top = Math.max(D, lv) + 150, hO = top - ybear;
+    const leaf = (xa, ya, xb, yb) => {
+      const w = xb - xa, a = Math.min(12, w / 8);
+      poly([[xa, ya], [xb, ya], [xb, yb], [xa + 0.62 * w, yb], [xa + 0.54 * w, yb + a], [xa + 0.46 * w, yb - a], [xa + 0.38 * w, yb], [xa, yb]], 'mas', back);
+    };
+    const slabS = p.sb_load === 'Slab', slabM = tor && p.mb_load === 'Slab';
+    if (slabS) rect(heel + (m === 'Plate' ? 0 : ybear) + 4, ybear, Math.max(toe, heel + p.e1) + 70, ybear + p.d_ssb, 'slab', back);
+    else leaf(xo, ybear, xo + p.b_msb, ybear + hO);
+    if (slabM) rect(-B - 70, D, -emb, D + p.d_smb, 'slab', back);
+    else if (tor) leaf(-emb - p.b_mmb, D, -emb, top);
+    // scale-dependent annotation
+    const W = Math.max(x1 - x0, 260), fs = W / 21, tk = fs * 0.35;
+    const txt = (x, y, s2, cls, anchor = 'middle', extra = '') => { ext(x, y); ext(x, y + fs); front.push(`<text class="${cls}" x="${x.toFixed(1)}" y="${(-y).toFixed(1)}" font-size="${fs.toFixed(1)}" text-anchor="${anchor}"${extra}>${s2}</text>`); };
+    const dimH = (xa, xb, y, label) => {
+      if (!(Math.abs(xb - xa) > 0.5)) return;
+      ext(xa, y); ext(xb, y);
+      front.push(`<path class="dim" d="M${P(xa, y)} L${P(xb, y)} M${P(xa - tk, y - tk)} L${P(xa + tk, y + tk)} M${P(xb - tk, y - tk)} L${P(xb + tk, y + tk)} M${P(xa, y - 1.5 * tk)} L${P(xa, y + 1.5 * tk)} M${P(xb, y - 1.5 * tk)} L${P(xb, y + 1.5 * tk)}"/>`);
+      txt((xa + xb) / 2, y + 0.35 * fs, label, 'dimt');
+    };
+    const arrow = (x, ya, yb, label) => {
+      ext(x, ya); ext(x, yb);
+      front.push(`<path class="ld" d="M${P(x, ya)} L${P(x, yb)} M${P(x - 0.3 * fs, yb + 0.55 * fs)} L${P(x, yb)} L${P(x + 0.3 * fs, yb + 0.55 * fs)}"/>`);
+      txt(x, ya + 0.3 * fs, label, 'ldt');
+    };
+    const yb = Math.min(m === 'Plate' ? -p.tsb : 0, 0) - 1.4 * fs;
+    dimH(xo, toe, yb, `d<tspan baseline-shift="sub" font-size="${(0.7 * fs).toFixed(1)}">m</tspan> ${f(o.dm, 0)}`);
+    if (m !== 'SCI') dimH(heel, heel + p.e1, yb - 1.7 * fs, `e<tspan baseline-shift="sub" font-size="${(0.7 * fs).toFixed(1)}">1</tspan> ${f(p.e1, 0)}`);
+    const yc = tor ? D + 0.45 * (top - D) : ybear + 0.6 * hO;
+    dimH(-emb, xo, yc, `c ${f(p.c, 0)}`);
+    const xw1 = slabS ? heel + p.e1 : xo + p.b_msb / 2, yS = ybear + (slabS ? p.d_ssb : 0) + 0.2 * fs;
+    if (slabS) arrow(xw1, yS + 2 * fs, yS, 'w₁'); else arrow(xw1, top + 2.4 * fs, top + 0.4 * fs, 'w₁');
+    if (tor) {
+      const xw2 = slabM ? -p.e2 : -emb - p.b_mmb / 2;
+      if (slabM) { const yM = D + p.d_smb + 0.2 * fs; arrow(xw2, yM + 2 * fs, yM, 'w₂'); } else arrow(xw2, top + 2.4 * fs, top + 0.4 * fs, 'w₂');
+      const r = 0.42 * fs;
+      ext(xsc - r, ysc - r); ext(xsc + r, ysc + r);
+      front.push(`<path class="scm" d="M${P(xsc - 1.6 * r, ysc)} L${P(xsc + 1.6 * r, ysc)} M${P(xsc, ysc - 1.6 * r)} L${P(xsc, ysc + 1.6 * r)}"/><circle class="scm" cx="${xsc.toFixed(2)}" cy="${(-ysc).toFixed(2)}" r="${r.toFixed(2)}"/>`);
+      txt(xsc + 0.8 * fs, ysc + 0.6 * fs, 'SC', 'sct', 'start');
+      dimH(xsc, xw1, top + 3.9 * fs, `e<tspan baseline-shift="sub" font-size="${(0.7 * fs).toFixed(1)}">1mb</tspan> ${f(o.e1mb, 0)}`);
+      dimH(xw2, xsc, top + 5.6 * fs, `e<tspan baseline-shift="sub" font-size="${(0.7 * fs).toFixed(1)}">2mb</tspan> ${f(o.e2mb, 0)}`);
+    }
+    const lx = slabS ? Math.max(toe, heel + p.e1) + 35 : xo + p.b_msb / 2, ly = slabS ? ybear + 0.1 * p.d_ssb : ybear + 0.3 * hO;
+    if (!slabS) front.push(`<text class="lft" x="${lx.toFixed(1)}" y="${(-ly).toFixed(1)}" font-size="${(0.8 * fs).toFixed(1)}" text-anchor="start" transform="rotate(-90 ${lx.toFixed(1)} ${(-ly).toFixed(1)})" dy="${(0.3 * fs).toFixed(1)}">outer leaf ${f(p.b_msb, 0)}</text>`);
+    else txt(lx, ly + 0.45 * p.d_ssb, 'slab', 'lft');
+    if (slabM) txt(-B / 2, D + 0.35 * p.d_smb, 'slab', 'lft');
+    else if (tor) { const ix = -emb - p.b_mmb / 2, iy = D + 0.08 * (top - D); front.push(`<text class="lft" x="${ix.toFixed(1)}" y="${(-iy).toFixed(1)}" font-size="${(0.8 * fs).toFixed(1)}" text-anchor="start" transform="rotate(-90 ${ix.toFixed(1)} ${(-iy).toFixed(1)})" dy="${(0.3 * fs).toFixed(1)}">inner leaf ${f(p.b_mmb, 0)}</text>`); }
+    const pad = fs * 0.8, vb = [x0 - pad, -(y1 + pad), x1 - x0 + 2 * pad, y1 - y0 + 2 * pad].map(v => v.toFixed(1)).join(' ');
+    const defs = `<defs><pattern id="mas" patternUnits="userSpaceOnUse" width="300" height="75"><rect width="300" height="75" style="fill:var(--brick-fill)"/><rect y="0" width="300" height="10" style="fill:var(--mortar)"/></pattern>` +
+      `<pattern id="hatch" patternUnits="userSpaceOnUse" width="14" height="14" patternTransform="rotate(45)"><rect width="14" height="14" style="fill:var(--surface-2)"/><line x1="0" y1="0" x2="0" y2="14" style="stroke:var(--hatch);stroke-width:1.2"/></pattern></defs>`;
+    const title = tor ? `${p.mb.name} with ${m === 'Plate' ? `${f(p.tsb, 0)} mm plate` : m === 'Cantilever' ? p.angle.name : 'stainless angle'}` : (m === 'Cantilever' ? p.angle.name : 'stainless angle');
+    $('draw').innerHTML = `<svg class="draw" viewBox="${vb}" role="img" aria-label="Cross-section: ${esc(title)}" preserveAspectRatio="xMidYMid meet">${defs}${back.join('')}${mid.join('')}${front.join('')}</svg>`;
+    $('legend').innerHTML = `<span>${esc(title)}</span>` + (tor ? `<span>SC = shear centre of the torsion beam</span>` : '') + '<span>Dimensions in mm</span>';
+  }
+
+  // ------------------------------------------------------------------ calculation sheet
+  function sheetMeta() {
+    return { company: st.company, address: st.address, project: st.project, jobref: st.jobref, section: st.section,
+      calcby: st.calcby, calcdate: st.calcdate || new Date().toLocaleDateString(), chkby: st.chkby, chkdate: st.chkdate,
+      appby: st.appby, appdate: st.appdate };
+  }
+  function setPrintPage(paper) {
+    let el = document.getElementById('sheet-page');
+    if (!el) { el = document.createElement('style'); el.id = 'sheet-page'; document.head.append(el); }
+    el.textContent = paper ? `@page{size:${paper === 'A4' ? '210mm 297mm' : '8.5in 11in'};margin:0}` : '';
+    document.body.classList.toggle('calc-sheet', !!paper);
+  }
+  function renderCalcSheet(p, o) {
+    const ver = `Masonry Support Designer calculation version ${String(SMS.version).split(' ')[0]}`;
+    const items = SMSReport.build(p, o, { versionLine: ver, versionLine2: ver });
+    const pages = SheetRender.render(items, sheetMeta(), { paper: st.paper, sketch: SheetSketch.sketch(p, o), sketchGap: SheetSketch.gap(p) });
+    $('tab-sheet').innerHTML = `<div class="tpages">${pages.join('')}</div>`;
+    setPrintPage(st.paper || 'Letter');
+  }
+
+  // ------------------------------------------------------------------ section properties
+  function renderSection(p, o) {
+    const rows = [], tor = p.design_method === 'Masonry support and torsion';
+    const T = (a, b, c) => rows.push(`<tr><td>${mk(a)}</td><td class="n">${b}</td><td>${mk(c || '')}</td></tr>`);
+    let html = '';
+    if (tor) {
+      const mb = p.mb, hr = mb.type === 'HR';
+      T('Section', esc(mb.name)); T('Source of properties', esc(mb.source || 'section tables'));
+      T('Depth D', f(mb.D, 1), 'mm'); T('Width B', f(mb.B, 1), 'mm'); T(hr ? 'Wall thickness t' : 'Web thickness t', f(mb.t, 2), 'mm');
+      if (!hr) { T('Flange thickness T', f(mb.T, 2), 'mm'); T('Root radius r', f(mb.r, 1), 'mm'); }
+      T('Area A', f(mb.A / 100, 2), 'cm^2'); T('I_{x}', f(mb.Ix / 1e4, 1), 'cm^4'); T('I_{y}', f(mb.Iy / 1e4, 1), 'cm^4');
+      T('Z_{x}', f(mb.Zx / 1e3, 1), 'cm^3'); T('Z_{y}', f(mb.Zy / 1e3, 1), 'cm^3'); T('S_{x}', f(mb.Sx / 1e3, 1), 'cm^3');
+      T('r_{y}', f(mb.ry, 2), 'mm'); T('Torsion constant J', f(mb.J / 1e4, 2), 'cm^4');
+      if (hr) T('Torsion modulus C', f(mb.C / 1e3, 1), 'cm^3');
+      else {
+        T('Warping constant H', f(mb.H / 1e12, 4), 'dm^6'); T('Buckling parameter u', f(mb.u, 3)); T('Torsional index x', f(mb.x, 2));
+        if (mb.type === 'C') T('Centroid from back of web c_{y}', f(mb.cy, 2), 'mm');
+        T('Shear centre from web centreline e_{0}', f(o.e0mb, 2), 'mm'); T('Normalised warping function W_{n0}', f(o.Wn0 / 100, 2), 'cm^2');
+        T('Warping statical moment S_{w1}', f(o.Sw1 / 1e4, 1), 'cm^4'); T('First moment Q_{f} (flange)', f(o.Qf / 1e3, 1), 'cm^3');
+        T('First moment Q_{w} (web)', f(o.Qw / 1e3, 1), 'cm^3'); T('Torsional bending constant a', f(o.a, 1), 'mm');
+      }
+      T('Design strength p_{y}', f(o.py, 0), 'N/mm^2'); T('Classification', esc(o.Class));
+      html += `<h3 class="sh-h">Torsion beam</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+      rows.length = 0;
+    }
+    if (p.sb_method === 'Cantilever') {
+      const a = p.angle;
+      T('Angle', esc(a.name)); T('Legs D × B × t', `${f(a.D, 0)} × ${f(a.B, 0)} × ${f(a.t, 1)}`, 'mm'); T('Radii r_{1}, r_{2}', `${f(a.r1, 1)}, ${f(a.r2, 1)}`, 'mm');
+      T('Area A', f(a.A / 100, 2), 'cm^2'); T('Centroid from back of long leg c_{yy}', f(a.cyy, 2), 'mm');
+      html += `<h3 class="sh-h">Support angle</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+      html += '<p class="nt">The method takes the self-weight lever of the angle from c<sub>yy</sub> whatever the orientation (Engineering notes F14).</p>';
+    } else if (p.sb_method === 'SCI') {
+      T('Legs l_{h} × l_{v} × t', `${f(p.lh, 0)} × ${f(p.lv, 0)} × ${f(p.tsb, 1)}`, 'mm'); T('Inside bend radius r_{1}', f(p.r1sb, 1), 'mm');
+      T('Area A_{sbu}', f(o.Asbu, 0), 'mm^2'); T('Back of vertical leg to CoG c_{yysb}', f(o.cyysb, 1), 'mm');
+      html += `<h3 class="sh-h">Stainless angle</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+    } else {
+      T('Plate l_{plate} × t_{sb}', `${f(p.lplate, 0)} × ${f(p.tsb, 1)}`, 'mm'); T('Area A_{sbu}', f(o.Asbu, 0), 'mm^2 per m'); T('Weld line to CoG c_{yysb}', f(o.cyysb, 1), 'mm');
+      html += `<h3 class="sh-h">Support plate</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+    }
+    $('tab-section').innerHTML = html;
+  }
+
+  // ------------------------------------------------------------------ engineering notes (method behaviour, with live figures)
+  function renderNotes(p, o) {
+    const tor = p.design_method === 'Masonry support and torsion', m = p.sb_method, N = [];
+    const add = (id, lvl, title, body) => N.push(`<div class="note ${lvl}"><h4><span class="id">${id}</span>${esc(title)}</h4><p>${body}</p></div>`);
+    if (tor) {
+      const mb = p.mb;
+      if (mb.type === 'C') {
+        const s = o.P1 * o.e1mb + o.w2ULS * o.e2mb + o.w3ULS * o.e3mb, e4 = (mb.t / 2 - mb.cy) - o.e0mb;
+        const tq2 = Math.abs(s + o.w4ULS * e4) * p.L;
+        add('F2', 'warn', 'Channel self-weight torque is left out', `The channel's centroid is ${f(Math.abs(e4), 1)} mm inboard of its shear centre, so its own weight twists it. Including it changes the ULS torque from ${f(o.Tq / 1e6, 2)} to ${f(tq2 / 1e6, 2)} kNm (${f(100 * (tq2 / o.Tq - 1), 1)} %). The method leaves it out.`);
+      }
+      add('F3', 'warn', 'Construction sequence is not checked', 'If the inner leaf is built ahead of the outer leaf, the outer leaf’s balancing torque is missing and the beam twists more than calculated. State a maximum height difference on the drawings or prop the beam.');
+      const toeX = m === 'Plate' ? p.lh : (m === 'Cantilever' ? ((p.orientation || 'Long') === 'Long' ? p.angle.D : p.angle.B) : p.lh) + (p.fixing === 'Bolt' ? p.shim : 0);
+      const xsc = mb.type === 'C' ? o.e0mb - mb.t / 2 : mb.B / 2;
+      const lever = toeX + xsc, drop = o.dy + (o.phi_sls_deg / DEG) * lever + o.delta_toe;
+      if (!o.slender) add('F4', 'info', 'Total drop of the outer-leaf bearing is not a check of the method', `Estimate at midspan, toe of the support: δ<sub>y</sub> + φ<sub>sls</sub> × ${f(lever, 0)} mm + δ<sub>toe</sub> = ${f(o.dy, 2)} + ${f((o.phi_sls_deg / DEG) * lever, 2)} + ${f(o.delta_toe, 2)} = <b>${f(drop, 1)} mm</b>. Compare with what the masonry and its movement joints can accept.`);
+      add('F6', 'warn', 'End connections must carry the torque', `The twist analysis assumes torsion-fixed ends. Each end connection must resist T<sub>q</sub>/2 = <b>${f(o.Tq / 2e6, 2)} kNm</b> (ULS) as a couple, for example through a full-depth end plate. The method does not design the connections.`);
+      if (!st.destab && !st.klt_override) add('F7', 'info', 'Destabilising load is a judgement', 'The inner leaf bears on the top flange. If the flange can move with the load, tick “Destabilising load” (Table 13, second column).');
+      if (mb.type !== 'HR') add('F9', 'info', 'Flange ratio for channels', `The method takes b/T with b = B/2 (${f(o.bt, 2)}) for channels too. BS 5950 takes b = B for channels (${f(mb.B / mb.T, 2)}). Check the class by hand if this ratio is near a limit.`);
+      if (mb.type === 'C' && mb.source && mb.source === 'section tables') add('F8', 'info', 'UKPFC torsion constants', 'J and H come from the section data used for the benchmarks. They differ slightly from the published section tables (UKPFC 300×100×46: J 36.45 against 36.8 cm⁴), which moves the twist by a few per cent.');
+    }
+    if (m === 'Plate' || (m === 'Cantilever' && p.fixing === 'Weld top')) {
+      if (tor && p.grade_sb !== p.grade_mb) add('F12', 'warn', 'Weld strength uses the support grade only', `p<sub>w</sub> = ${f(o.pweld, 0)} N/mm² comes from the ${esc(p.grade_sb)} support member. The beam is ${esc(p.grade_mb)}: BS 5950 takes the weaker of the parts joined.`);
+    }
+    if (m === 'Plate') {
+      if (o.dm < 2 / 3 * p.b_msb && p.sb_load !== 'Slab') add('F13', 'warn', 'Less than 2/3 bearing', `d<sub>m</sub> = ${f(o.dm, 1)} mm is below 2/3 of the leaf width (${f(2 / 3 * p.b_msb, 1)} mm). The method rejects this for angles but not for plates.`);
+      add('F10', 'info', 'Weld model is conservative', `Longitudinal shear assumes the plate at full yield: R<sub>l</sub> = 2R<sub>p</sub>/L = ${f(o.Rl, 0)} kN/m.`);
+    }
+    if (m !== 'SCI') {
+      const b = bearing(st);
+      if (p.sb_load !== 'Slab' && Number.isFinite(b.cl) && Math.abs(b.cl - p.e1) > 0.5) add('F5', 'warn', 'e₁ is not at the bearing centreline', `e<sub>1</sub> = ${f(p.e1, 1)} mm but the outer leaf bears centrally at ${f(b.cl, 1)} mm from the heel. e<sub>1</sub> only feeds the support-member checks; the torque uses the leaf centreline. Use the “Use” button next to e<sub>1</sub> unless the load really sits off-centre.`);
+    }
+    if (m === 'Cantilever' && p.angle.D !== p.angle.B) add('F14', 'info', 'Unequal angle centroid', `The method uses the centroid distance from the back of the long leg (${f(p.angle.cyy, 1)} mm) as the self-weight lever for either orientation. The effect is small.`);
+    if (p.fixing === 'Bolt') add('B1', 'info', 'Bolt tension strength', 'Bolt capacities use p<sub>t</sub> = 195 / 450 N/mm² (grade 4.6 / 8.8) the BS 5950-1:1990 values used by the benchmarks. BS 5950-1:2000 Table 34 gives higher values, so this is conservative.');
+    if (p.sb_load === 'Slab' || p.mb_load === 'Slab') add('S1', 'info', 'Slab option', `The slab reactions replace the masonry and the extra loads are ignored. The slab edge acts at e<sub>1</sub> from the heel${p.mb_load === 'Slab' ? ', and the slab on the beam at e<sub>2</sub> from the beam face on the cavity side' : ''}; slab depths are recorded but not used. Rules confirmed by benchmark runs (2 Oct 2026).`);
+    if (m === 'Cantilever' && tor && (p.h_bf || 0) < 0) add('H1', 'info', 'Angle soffit above the beam soffit', `With h<sub>bf</sub> = ${f(p.h_bf, 0)} mm the method shortens the lever to l = ${f(o.l, 1)} mm and the load arm to a<sub>m</sub> = ${f(o.am, 1)} mm; λ<sub>m</sub> keeps l<sub>b</sub> = ${f(o.lb, 1)} mm. A positive h<sub>bf</sub> changes nothing.`);
+    add('F11', 'info', 'Loads to confirm', 'Full leaf height with no arching, the leaf densities, and any floor or roof load on the inner leaf. Enter floor or roof loads as extra dead or imposed load on the torsion beam.');
+    $('tab-notes').innerHTML = `<div class="prose"><p>This page applies the method exactly as benchmarked, including the simplifications below. Each note shows its effect on the current design. IDs are the finding numbers from the validation study.</p></div><div class="notes">${N.join('')}</div>`;
+  }
+
+  // ------------------------------------------------------------------ Eurocode 3 path: beam-v03 engine + EN 1993 support checks
+  const htmlText = s => new DOMParser().parseFromString(String(s), 'text/html').body.textContent || '';
+  const v03Sym = s => String(s).replace(/_([A-Za-z0-9,.]+)/g, '_{$1}');
+  function splitV03(name) {                                  // "LTB+torsion (EN 1993-6 Annex A)" / "Shear  V_Ed/V_c,Rd"
+    let n = String(name), ref = '';
+    const m = n.match(/^(.*?)\s*\((.*)\)\s*$/);
+    if (m) { n = m[1]; ref = m[2]; }
+    const i = n.indexOf('  ');
+    if (i > 0) { ref = v03Sym(n.slice(i).trim()) + (ref ? ', ' + ref : ''); n = n.slice(0, i); }
+    return [n.trim(), ref];
+  }
+  const endTorque = R => { const t = R.ch && R.ch.tor; return !t ? 0 : Math.abs(t.TEnds && t.TEnds.length ? +t.TEnds[0] : +t.TEd || 0); };
+  function twistEC(p, R) {
+    const t = R.ch && R.ch.tor, phi = !t ? 0 : Math.abs(+(t.p385 ? t.phiSerDeg : t.box ? t.phiDeg : 0) || 0);   // beam-v03's own SLS twist rule
+    if (p.twist_check === 'Lever') { const d = p.h_d * phi / DEG; return { phi, value: d, lim: p.d_h_lim, u: d / p.d_h_lim }; }
+    return { phi, value: phi, lim: p.phi_lim, u: phi / p.phi_lim };
+  }
+  function checkListEC(p, R) {
+    const L = [], add = (name, ref, u) => L.push({ name, ref, u }), u = R.sup.util, m = p.sb_method;
+    if (m === 'Plate') {
+      add('Plate: bending at heel', 'EN 1993-1-1 6.2.5, M_{c,Rd} = W_{pl} f_{y} / γ_{M0}', u.heel);
+      if ('transverse' in u) add('Plate: biaxial stress ratio', 'SCI P110 model with f_{y} / γ_{M0}', u.transverse);
+      add('Plate: deflection at toe', 'δ ≤ 2 mm', u.toe);
+      add('Plate: weld to beam', 'EN 1993-1-8 4.5.3.3', u.weld);
+      if (p.con_stage) {
+        add('Construction: bending at heel', '1.2 m high wall', u.heel_c);
+        if ('transverse_c' in u) add('Construction: stress ratio', 'α_{lsc} ≤ α_{ts}', u.transverse_c);
+        add('Construction: deflection at toe', 'δ_{c} ≤ 2 mm', u.toe_c);
+      }
+    } else {
+      const nm = m === 'SCI' ? 'Stainless angle' : 'Angle';
+      add(`${nm}: stress at heel`, m === 'SCI' ? 'EN 1993-1-4, σ ≤ f_{y} / γ_{M0}' : 'EN 1993-1-1, σ ≤ f_{y} / γ_{M0} (elastic)', u.heel);
+      add(`${nm}: deflection at toe`, `δ ≤ ${f(R.sup.delta_lim, 2)} mm`, u.toe);
+      if ('bolt' in u) {
+        add('Bolt: shear and tension', 'EN 1993-1-8 Table 3.4', u.bolt);
+        add('Bolt: combined', 'F_{v}/F_{v,Rd} + F_{t}/(1.4 F_{t,Rd}) ≤ 1', u.bolt_comb);
+        add('Bolt: bearing on the angle', 'EN 1993-1-8 Table 3.4', u.bearing);
+      } else add('Angle: weld', 'EN 1993-1-8 4.5.3.3', u.weld);
+    }
+    if (R.ch) {
+      for (const x of R.ch.utils) {
+        if (/^Deflection/.test(x.name)) continue;
+        const [nm, ref] = splitV03(x.name);
+        add('Beam: ' + nm, ref || 'beam-v03', x.val);
+      }
+      const tw = twistEC(p, R);
+      if (p.twist_on !== 0) add(p.twist_check === 'Lever' ? 'Twist: movement at lever arm (SLS)' : 'Twist (SLS)',
+        p.twist_check === 'Lever' ? `δ_{h} ≤ ${f(tw.lim, 1)} mm` : `φ ≤ ${f(tw.lim, 2)}° (project limit)`, tw.u);
+      if (p.defl_on !== 0) add('Beam: deflection (SLS)', `min(L/${f(p.k_delta, 0)}, ${f(p.d_lim_abs, 1)} mm)`, (R.ch.dmax + p.d_add) / R.ch.dlimit);
+    }
+    return L;
+  }
+  function drawingInputEC(p, R) {
+    const ld = lbl => (R.loads || []).find(l => l.label === lbl);
+    const o = ld('outer leaf') || ld('slab edge on support'), i = ld('inner leaf') || ld('slab on beam');
+    return { e0mb: R.mb ? R.mb.e0 : 0, dm: R.sup.dm, e1mb: o ? -o.e : 0, e2mb: i ? -i.e : 0 };
+  }
+  function updateEC(p, errs, warns) {
+    const msgs = errs.map(t => ['err', t]).concat(warns.map(t => ['warn', t]));
+    msgs.push(['info', 'Eurocode 3, UK NA. Beam checks: beam-v03 engine (torsion to SCI P385). Plate, angle, weld and bolt checks: verified by hand calculation only; this route has no external benchmark.']);
+    let R = null;
+    if (!errs.length) {
+      try {
+        if (isTor(st)) {
+          const hit = EC3MS.find(st.mb_family, st.mb_name);
+          R = EC3MS.run(p, { mb_family: st.mb_family, key: hit.key, name: hit.name, zgInner: st.zg_inner, gM0ss: +st.gm0ss });
+          p.mb = R.mb;
+          (R.ch.unsupported || []).forEach(t => msgs.push(['warn', 'beam-v03: ' + htmlText(t)]));
+        } else R = { sup: EC3MS.supportOnly(p, { gM0ss: +st.gm0ss }) };
+      } catch (e) { msgs.unshift(['err', `The calculation stopped: ${e.message}`]); R = null; }
+    }
+    $('msgs').innerHTML = msgs.map(([c, t]) => `<div class="msg ${c}">${mk(t)}</div>`).join('');
+    if (!R) {
+      $('verdict').className = 'verdict na';
+      $('verdict').innerHTML = '<div class="state">Waiting</div><div><h2>Fix the inputs above to see results</h2></div>';
+      return;
+    }
+    const checks = checkListEC(p, R), keys = [[p.sb_load === 'Slab' ? 'Slab edge load P₁ (ULS)' : 'Outer leaf load P₁ (ULS)', f(R.sup.P1, 2) + ' kN/m']];
+    if (R.ch) {
+      const tw = twistEC(p, R), an = R.ch.utils.find(x => /Annex A/.test(x.name));
+      keys.push(['End torque T_Ed (ULS)', f(endTorque(R), 2) + ' kNm']);
+      keys.push(['Twist φ (SLS)', f(tw.phi, 2) + '°']);
+      keys.push(['Deflection δ_y (SLS)', f(R.ch.dmax + p.d_add, 2) + ' mm']);
+      if (an) keys.push(['LTB + torsion', f(an.val, 3)]);
+    } else {
+      keys.push(['Stress at heel', f(R.sup.sigma_heel, 1) + ' N/mm²']);
+      keys.push(['Toe deflection', f(R.sup.delta_toe, 2) + ' mm']);
+    }
+    renderVerdict(p, null, checks, keys);
+    renderUtil(checks);
+    renderDrawing(p, drawingInputEC(p, R));
+    setPrintPage(null);
+    renderSheetEC(p, R, checks);
+    renderSectionEC(p, R);
+    renderNotesEC(p, R);
+  }
+
+  function renderSheetEC(p, R, checks) {
+    const out = [], tor = !!R.ch, m = p.sb_method, s = R.sup, u = s.util, bolt = p.fixing === 'Bolt', long = (p.orientation || 'Long') === 'Long';
+    const H = (t, sub) => out.push(`<h3 class="sh-h">${esc(t)}${sub ? `<small>${mk(sub)}</small>` : ''}</h3>`);
+    const R_ = (lb, sym, fx, val, unit) => out.push(`<div class="r"><div class="lb">${esc(lb)}</div><div class="ex">${sym ? mk(sym) + ' = ' : ''}${fx ? mk(fx) + ' = ' : ''}<span class="v">${val}</span>${unit ? ' ' + mk(unit) : ''}</div></div>`);
+    const V = (lb, text) => out.push(`<div class="r"><div class="lb">${esc(lb)}</div><div class="ex">${mk(text)}</div></div>`);
+    const C = (uu, okText, ngText) => { const k = state(uu); out.push(`<div class="ck ${k}"><span class="tag">${k === 'ok' ? 'PASS' : k === 'ng' ? 'FAIL' : 'N/A'}</span><span>${esc(k === 'ng' ? ngText : okText)}</span><span class="u">utilisation ${f(uu, 3)}</span></div>`); };
+    const N = t => out.push(`<p class="nt">${mk(t)}</p>`);
+    const today = new Date().toISOString().slice(0, 10);
+    out.push(`<div class="tblock"><div><span>Project</span>${esc(st.project || '—')}</div><div><span>Job ref.</span>${esc(st.jobref || '—')}</div><div><span>Calc. by</span>${esc(st.calcby || '—')}</div><div><span>Date</span>${today}</div>` +
+      `<div style="grid-column:1/-1"><span>Calculation</span>Steel masonry support to Eurocode 3 with the UK National Annexes: EN 1990, EN 1993-1-1, EN 1993-1-4, EN 1993-1-8${tor ? '; torsion beam to SCI P385 (beam-v03 engine)' : ''}. Support-member load models as SCI P110 / SCI P157.</div></div>`);
+
+    H('Design basis');
+    V('Combinations', `ULS: EN 1990 Eq 6.10, ${f(p.gG, 2)} G + ${f(p.gQ, 2)} Q. SLS: 1.0 G + 1.0 Q.`);
+    V('Partial factors (UK NA)', `γ_{M0} = 1.0 (EN 1993-1-1), γ_{M2} = 1.25 (EN 1993-1-8)${m === 'SCI' ? `; stainless γ_{M0} = ${f(s.gM0ss, 2)} [verify against the UK NA to BS EN 1993-1-4]` : ''}`);
+    V('Modulus of elasticity', m === 'SCI' ? 'E = 210000 N/mm² carbon steel; E = 200000 N/mm² austenitic stainless (EN 1993-1-4)' : 'E = 210000 N/mm²');
+
+    H('Support member');
+    if (m === 'Plate') {
+      V('Masonry support', 'Steel plate welded under the torsion beam');
+      R_('Yield strength (EN 10025-2, ' + p.grade_sb + ')', 'f_{y}', '', f(s.fy, 0), 'N/mm^2');
+      R_('Length beyond the beam', 'l_{h}', '', f(p.lh, 0), 'mm'); R_('Total length', 'l_{plate}', '', f(p.lplate, 0), 'mm'); R_('Thickness', 't_{sb}', '', f(p.tsb, 1), 'mm');
+    } else if (m === 'Cantilever') {
+      const lh = long ? p.angle.D : p.angle.B, lv = long ? p.angle.B : p.angle.D;
+      V('Masonry support angle', p.angle.name + ` (${p.grade_sb})`);
+      R_('Yield strength (EN 10025-2)', 'f_{y}', '', f(s.fy, 0), 'N/mm^2'); R_('Tensile strength', 'f_{u}', '', f(s.fu, 0), 'N/mm^2');
+      R_('Vertical leg', 'l_{v}', '', f(lv, 0), 'mm'); R_('Horizontal leg', 'l_{h}', '', f(lh, 0), 'mm'); R_('Thickness', 't_{sb}', '', f(p.angle.t, 1), 'mm');
+      R_('Centroid from the back of the vertical leg', 'c_{h}', '', f(long ? p.angle.cx : p.angle.cyy, 1), 'mm');
+    } else {
+      V('Masonry support angle', `Cold-formed stainless steel angle, grade ${p.grade_sb}`);
+      R_('0.2 % proof strength (EN 1993-1-4 Table 2.1)', 'f_{y}', '', f(s.fy, 0), 'N/mm^2'); R_('Tensile strength', 'f_{u}', '', f(s.fu, 0), 'N/mm^2');
+      R_('Design strength', 'f_{y} / γ_{M0}', '', f(s.fyd, 0), 'N/mm^2');
+      R_('Vertical leg', 'l_{v}', '', f(p.lv, 0), 'mm'); R_('Horizontal leg', 'l_{h}', '', f(p.lh, 0), 'mm'); R_('Thickness', 't_{sb}', '', f(p.tsb, 1), 'mm'); R_('Internal radius', 'r_{1sb}', '', f(p.r1sb, 1), 'mm');
+    }
+    H('Supported materials');
+    if (tor && p.mb_load === 'Slab') V('Slab on the beam', `P_{Gsmb} = ${f(p.PG_smb, 2)} kN/m, P_{Qsmb} = ${f(p.PQ_smb, 2)} kN/m at e_{2} = ${f(p.e2, 1)} mm from the beam face; e_{mb} = ${f(p.e_mb, 1)} mm`);
+    else if (tor && p.direct_mb) V('Direct loads on the beam', `${directText(p.direct_mb)}; at the centre of a ${f(p.b_mmb, 0)} mm wide leaf; e_{mb} = ${f(p.e_mb, 1)} mm`);
+    else if (tor) V('Inner leaf (on the beam)', `${f(p.b_mmb, 0)} mm × ${f(p.h_mmb, 0)} mm at ${f(p.rho_m_mb * 1e6, 1)} kN/m³; extra ${f(p.PGadd_mb, 2)} G + ${f(p.PQadd_mb, 2)} Q kN/m; e_{mb} = ${f(p.e_mb, 1)} mm`);
+    if (p.sb_load === 'Slab') V('Slab edge (on the support)', `P_{Gssb} = ${f(p.PG_ssb, 2)} kN/m, P_{Qssb} = ${f(p.PQ_ssb, 2)} kN/m at e_{1} = ${f(p.e1, 1)} mm from the heel`);
+    else if (p.direct_sb) V('Direct loads on the support', `${directText(p.direct_sb)}; on a ${f(p.b_msb, 0)} mm wide leaf`);
+    else V('Outer leaf (on the support)', `${f(p.b_msb, 0)} mm × ${f(p.h_msb, 0)} mm at ${f(p.rho_m_sb * 1e6, 1)} kN/m³; extra ${f(p.PGadd_sb, 2)} G + ${f(p.PQadd_sb, 2)} Q kN/m`);
+    H('Geometry');
+    if (bolt) { R_('Bolt spacing', 'B_{bolt}', '', f(p.Bbolt, 0), 'mm'); R_('Top of angle to bolt centreline', 'e_{b}', '', f(p.eb, 1), 'mm'); R_('Shim', 's', '', f(p.shim, 1), 'mm'); }
+    R_('Cavity width', 'c', '', f(p.c, 0), 'mm');
+    R_('Supported width of masonry', 'd_{m}', m === 'Plate' ? 'l_{h} + e_{mb} − c' : 'l_{h} + s + e_{mb} − c', f(s.dm, 1), 'mm');
+    if (p.sb_load === 'Slab') {
+      R_('Force of the slab edge on the support (ULS)', 'P_{1}', 'P_{Gssb} × γ_{G} + P_{Qssb} × γ_{Q}', f(s.P1, 2), 'kN/m');
+      R_('Unfactored force (SLS)', 'P_{1,SLS}', 'P_{Gssb} + P_{Qssb}', f(s.P1SLS, 2), 'kN/m');
+    } else {
+      N(`Bearing (SCI P157): d_{m} ${s.dm >= 2 / 3 * p.b_msb ? '≥' : '<'} 2/3 × b_{msb} = ${f(2 / 3 * p.b_msb, 1)} mm.`);
+      if (p.direct_sb) {
+        R_('Force of the direct loads on the support (ULS)', 'P_{1}', 'ΣG × γ_{G} + ΣQ × γ_{Q}', f(s.P1, 2), 'kN/m');
+        R_('Unfactored force (SLS)', 'P_{1,SLS}', 'ΣG + ΣQ', f(s.P1SLS, 2), 'kN/m');
+      } else {
+        R_('Force of masonry on the support (ULS)', 'P_{1}', '(b_{msb} × h_{msb} × ρ_{m,sb} + P_{Gaddsb}) × γ_{G} + P_{Qaddsb} × γ_{Q}', f(s.P1, 2), 'kN/m');
+        R_('Unfactored force (SLS)', 'P_{1,SLS}', 'b_{msb} × h_{msb} × ρ_{m,sb} + P_{Gaddsb} + P_{Qaddsb}', f(s.P1SLS, 2), 'kN/m');
+      }
+    }
+    if (m === 'Cantilever' && s.hb < 0) R_('Lever and load arm with the angle soffit h_{bf} above the beam soffit', 'l, a_{m}', 'l_{b} + h_{bf}, e_{1} + h_{bf}', `${f(s.l, 1)}, ${f(s.am, 1)}`, 'mm');
+
+    const weldLines = (w, force, forceSym) => {
+      R_('Leg length', 's_{weld}', '', f(p.s_weld, 0), 'mm'); R_('Throat', 'a', 's_{weld} / √2', f(w.a, 2), 'mm');
+      V('Weaker part joined', `${w.grade}: f_{u} = ${f(w.fu, 0)} N/mm², β_{w} = ${w.betaW} (EN 1993-1-8 Table 4.1)`);
+      R_('Design shear strength of the weld', 'f_{vw,d}', 'f_{u} / (√3 × β_{w} × γ_{M2})', f(w.fvwd, 1), 'N/mm^2');
+      R_('Design resistance per unit length', 'F_{w,Rd}', 'a × f_{vw,d}', f(w.FwRd / 1e3, 3), 'kN/mm');
+      R_('Design force per unit length', forceSym, '', f(force / 1e3, 3), 'kN/mm');
+    };
+    if (m === 'Plate') {
+      H('Bending at the heel', 'EN 1993-1-1 6.2.5; a plate strip in bending is Class 1');
+      R_('Heel to load', 'e_{1}', '', f(p.e1, 1), 'mm');
+      R_('Design moment at the heel', 'M_{Ed}', 'P_{1} × e_{1}', f(s.MEd / 1e3, 3), 'kNm/m');
+      R_('Plastic modulus', 'W_{pl}', 't_{sb}^2 / 4', f(s.Wpl, 2), 'cm^3/m');
+      R_('Moment resistance', 'M_{c,Rd}', 'W_{pl} × f_{y} / γ_{M0}', f(s.McRd / 1e3, 3), 'kNm/m');
+      C(u.heel, 'Moment resistance exceeds the design moment', 'Design moment exceeds the moment resistance');
+      if (tor) {
+        H('Biaxial stresses in the plate', 'SCI P110 model (von Mises, plastic) with f_{y} / γ_{M0}');
+        R_('Beam design moment (beam-v03)', 'M_{y,Ed}', '', f(R.ch.Mx, 2), 'kNm');
+        R_('Neutral axis of beam + plate from the beam centroid', 'y_{e}', '(D + t_{sb}) × A_{p} / (2 × (A + A_{p}))', f(s.ye, 1), 'mm');
+        R_('Second moment of area of beam + plate', 'I_{all}', '', f(s.Ixx / 1e4, 0), 'cm^4');
+        R_('Elastic modulus at the plate', 'W_{all}', 'I_{all} / (D / 2 + t_{sb} − y_{e})', f(s.Zxx / 1e3, 1), 'cm^3');
+        R_('Longitudinal stress in the plate', 'σ_{1}', 'M_{y,Ed} / W_{all}', f(s.sigma1, 1), 'N/mm^2');
+        R_('', 'c_{fp}', '(4 f_{yd}^2 − 3 σ_{1}^2)^{0.5}', f(s.cfp, 1), 'N/mm^2');
+        R_('Transverse moment ratio limit', 'α_{ts}', '(c_{fp}^2 − σ_{1}^2) / (2 c_{fp} f_{yd})', f(s.alpha_ts, 3), '');
+        R_('Transverse moment ratio', 'α_{ls}', 'M_{Ed} / M_{c,Rd}', f(s.alpha_ls, 3), '');
+        C(u.transverse, 'Transverse moment ratio within the limit', 'Transverse moment ratio exceeds the limit');
+      }
+      H('Deflection at toe', 'SLS, E = 210000 N/mm²');
+      R_('Load position as ratio of length', 'a_{l}', 'e_{1} / l_{h}', f(s.al, 3), '');
+      R_('Deflection at toe', 'δ', '(a_{l}^2 (3 − a_{l}) / 6) × P_{1,SLS} × l_{h}^3 / (E × t_{sb}^3 / 12)', f(s.delta_toe, 2), 'mm');
+      R_('Deflection limit', 'δ_{lim}', '', '2.00', 'mm');
+      C(u.toe, 'Deflection within the limit', 'Deflection exceeds the limit');
+      if (p.con_stage) {
+        H('Construction stage', '1.2 m high outer leaf, load at the leaf centreline (SCI P157)');
+        R_('Eccentricity', 'e_{1c}', 'c − e_{mb} + b_{msb} / 2 − s', f(s.e1c, 1), 'mm');
+        R_('Force', 'P_{1c}', '1.2 m × b_{msb} × ρ_{m,sb} × γ_{G}', f(s.P1c, 2), 'kN/m');
+        R_('Design moment at the heel', 'M_{Ed,c}', 'P_{1c} × e_{1c}', f(s.MEdc / 1e3, 3), 'kNm/m');
+        C(u.heel_c, 'Moment resistance exceeds the design moment', 'Design moment exceeds the moment resistance');
+        if ('transverse_c' in u) C(u.transverse_c, 'Transverse moment ratio within α_ts', 'Transverse moment ratio exceeds α_ts');
+        R_('Deflection at toe', 'δ_{c}', '', f(s.delta_c, 2), 'mm');
+        C(u.toe_c, 'Deflection within the limit', 'Deflection exceeds the limit');
+      }
+      H('Weld to the beam', 'EN 1993-1-8 4.5.3.3 simplified method; forces from the BS route model (propped cantilever, plate at full yield for R_{l})');
+      R_('Vertical shear at the weld', 'R_{A}', 'P_{1} × max(1 + 3 e_{1} / B, 1.4)', f(s.RA, 2), 'kN/m');
+      R_('Maximum force in the plate', 'R_{p}', '(l_{h} + B) × t_{sb} × f_{y} / γ_{M0}', f(s.Rp / 1e3, 1), 'kN');
+      R_('Longitudinal shear', 'R_{l}', '2 R_{p} / L', f(s.Rl, 1), 'kN/m');
+      R_('Horizontal shear', 'R_{h}', 'P_{1} × e_{1} / (s_{weld} / 2 + t_{sb} / 2)', f(s.Rh, 1), 'kN/m');
+      weldLines(s.weld, s.Rweld, 'F_{w,Ed} = (R_{A}^2 + R_{l}^2 + R_{h}^2)^{0.5}');
+      C(u.weld, 'Weld resistance exceeds the design force', 'Design force exceeds the weld resistance');
+    } else {
+      H('Stress at the heel', m === 'SCI' ? 'SCI P157 load model; EN 1993-1-4 design strength' : 'elastic, with the SCI P157 effective breadths');
+      if (m === 'Cantilever') {
+        R_('Heel to load', 'e_{1}', '', f(p.e1, 1), 'mm');
+        R_('Moment at the heel', 'M_{1}', 'P_{1} × e_{1}', f(s.M1 / 1e3, 3), 'kNm/m');
+        R_('Elastic modulus of the leg', 'W_{el}', 't_{sb}^2 / 6', f(s.Zel, 2), 'cm^3/m');
+        if (bolt) {
+          R_('Effective width factor', 'λ_{m}', 'B_{bolt} / (l_{h} + l_{b})', f(s.lam_m, 3), '');
+          R_('Effective breadth for stress', 'B_{eff,str}', 'min(2 B_{bolt} / (0.4 + λ_{m}), B_{bolt})', f(s.Beff_str, 1), 'mm');
+          R_('Stress at the heel', 'σ', 'B_{bolt} × M_{1} / (B_{eff,str} × W_{el})', f(s.sigma_heel, 1), 'N/mm^2');
+        } else R_('Stress at the heel', 'σ', 'M_{1} / W_{el}', f(s.sigma_heel, 1), 'N/mm^2');
+      } else {
+        R_('Bolt centreline to start of bend', 'l', 'l_{b} − (t_{sb} + r_{1sb})', f(s.l, 1), 'mm');
+        R_('Position of resultant load', 'e', 'max(10 mm, min(b_{msb} / 2, min(16.5 t_{sb} / (l + g) − 0.73, 1) × d_{m}))', f(s.e, 1), 'mm');
+        R_('Bearing point to load (around the bend)', 'a_{m}', '', f(s.am, 1), 'mm');
+        R_('Effective breadth for stress', 'B_{eff,str}', 'min(2 B_{bolt} / (0.4 + λ_{m}), B_{bolt})', f(s.Beff_str, 1), 'mm');
+        R_('Stress at the heel', 'σ', '6 P_{1} B_{bolt} (c − e_{mb} + e − s − 0.5 t_{sb}) / (B_{eff,str} t_{sb}^2)', f(s.sigma_heel, 1), 'N/mm^2');
+      }
+      R_('Design strength', 'f_{y} / γ_{M0}', '', f(s.fyd, 0), 'N/mm^2');
+      C(u.heel, 'Design strength exceeds the stress at the heel', 'Stress at the heel exceeds the design strength');
+      H('Deflection at toe', `SLS, E = ${s.E} N/mm²`);
+      R_('Ratios', 'p_{def} / q_{def}', 'a_{m} / l, b_{m} / l', `${f(s.pdef, 3)} / ${f(s.qdef, 3)}`, '');
+      R_('Deflection at toe', 'δ', '', f(s.delta_toe, 2), 'mm');
+      R_('Deflection limit', 'δ_{lim}', m === 'SCI' ? 'min((1 + d_{m} / c) × 1 mm, 2 mm)' : '', f(s.delta_lim, 2), 'mm');
+      C(u.toe, 'Deflection within the limit', 'Deflection exceeds the limit');
+      if (bolt) {
+        const b = s.bolt;
+        H('Bolts', 'EN 1993-1-8 Table 3.4, one row of bolts');
+        V('Bolts', `Grade ${p.bolt_grade}, ${p.bolt_size} at ${f(p.Bbolt, 0)} mm: f_{ub} = ${f(b.fub, 0)} N/mm², A_{s} = ${f(b.As, 1)} mm²`);
+        R_('Shear resistance (thread in the shear plane)', 'F_{v,Rd}', '0.6 × f_{ub} × A_{s} / γ_{M2}', f(b.FvRd / 1e3, 1), 'kN');
+        R_('Tension resistance', 'F_{t,Rd}', '0.9 × f_{ub} × A_{s} / γ_{M2}', f(b.FtRd / 1e3, 1), 'kN');
+        R_('Shear per bolt', 'F_{v,Ed}', 'P_{1} × B_{bolt}', f(b.FvEd / 1e3, 2), 'kN');
+        R_('Tension per bolt', 'F_{t,Ed}', m === 'SCI' ? 'B_{bolt} × P_{1} × a_{m} / l' : 'B_{bolt} × M_{1} / l', f(b.FtEd / 1e3, 2), 'kN');
+        C(u.bolt, 'Shear and tension resistances exceed the bolt forces', 'A bolt force exceeds its resistance');
+        R_('Combined shear and tension', '', 'F_{v,Ed} / F_{v,Rd} + F_{t,Ed} / (1.4 F_{t,Rd})', f(b.u_comb, 3), '');
+        C(u.bolt_comb, 'Combined check within 1.0', 'Combined check exceeds 1.0');
+        R_('Hole diameter (EN 1090-2 normal clearance)', 'd_{0}', '', f(b.d0, 0), 'mm');
+        R_('', 'α_{b}', 'min(e_{b} / (3 d_{0}), f_{ub} / f_{u}, 1.0)', f(b.alphaB, 3), '');
+        R_('', 'k_{1}', 'min(1.4 B_{bolt} / d_{0} − 1.7, 2.5)', f(b.k1, 2), '');
+        if (m === 'SCI') R_('Reduced tensile strength for bearing (stainless) [verify]', 'f_{u,red}', '0.5 f_{y} + 0.6 f_{u} ≤ f_{u}', f(b.fuB, 0), 'N/mm^2');
+        R_('Bearing resistance of the angle leg', 'F_{b,Rd}', 'k_{1} × α_{b} × f_{u} × d × t / γ_{M2}', f(b.FbRd / 1e3, 1), 'kN');
+        C(u.bearing, 'Bearing resistance exceeds the bolt shear', 'Bolt shear exceeds the bearing resistance');
+      } else {
+        H('Weld to the beam', 'EN 1993-1-8 4.5.3.3 simplified method');
+        R_('Resultant force per metre of angle', 'f', '(P_{1}^2 + (M_{1} / l)^2)^{0.5}', f(s.f_weld, 2), 'kN/m');
+        R_('Weld length per metre', 'l_{weld}', '', f(p.l_weld * 1000, 0), 'mm/m');
+        weldLines(s.weld, s.Fw_Ed, 'F_{w,Ed} = f / l_{weld}');
+        C(u.weld, 'Weld resistance exceeds the design force', 'Design force exceeds the weld resistance');
+      }
+    }
+    if (tor) {
+      const G = p.gG, Q = p.gQ;
+      H('Loads on the torsion beam', 'e from the shear centre, + inward (beam-v03 sign); z_{g} + above the shear centre (destabilising)');
+      const rows = R.loads.map(l => `<tr><td>${esc(l.label)}</td><td>${l.case}</td><td class="n">${f(l.w, 3)}</td><td class="n">${f(l.e, 1)}</td><td class="n">${f(l.zg, 1)}</td></tr>`).join('') +
+        `<tr><td>beam self-weight (beam-v03, automatic)</td><td>G</td><td class="n">${f(R.swKN, 3)}</td><td class="n">${f(R.swE, 1)}</td><td class="n">0.0</td></tr>`;
+      out.push(`<div class="scroll"><table class="lt"><thead><tr><th>Load</th><th>Case</th><th class="n">w (kN/m)</th><th class="n">e (mm)</th><th class="n">z<sub>g</sub> (mm)</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+      const tq = R.loads.reduce((a, l) => a + (l.case === 'Q' ? Q : G) * l.w * l.e, 0) + G * R.swKN * R.swE;
+      N(`Torque per metre at ULS (for information): T = Σ γ w e = ${f(tq / 1e3, 3)} kNm/m. Mirrored channel: ${R.mirror ? 'yes' : 'no'}. Shear centre ${f(Math.abs(R.dsc), 1)} mm ${R.dsc < 0 ? 'outside' : 'inside'} the beam's outer face.`);
+      H('Torsion beam design', 'beam-v03 engine (EN 1993-1-1, EN 1993-1-5, SCI P385); the report below is beam-v03\'s own');
+      out.push(`<div class="v03">${EC3MS.brief(R)}</div>`);
+      const tw = twistEC(p, R);
+      H('Serviceability limits of this design', (p.twist_on === 0 ? 'twist check switched off; ' : '') + (p.defl_on === 0 ? 'deflection check switched off' : ''));
+      R_('Maximum twist at SLS (beam-v03)', 'φ_{sls}', '', f(tw.phi, 2), '°');
+      if (p.twist_check === 'Lever') { R_('Movement at the lever arm', 'δ_{h}', 'h_{δ} × φ_{sls}', f(tw.value, 2), 'mm'); R_('Limit', 'δ_{h,lim}', '', f(tw.lim, 1), 'mm'); }
+      else R_('Twist limit (project criterion; SCI P385 suggests about 2°)', 'φ_{lim}', '', f(tw.lim, 2), '°');
+      C(tw.u, 'Twist within the limit', 'Twist exceeds the limit');
+      R_('Maximum deflection at SLS (beam-v03)', 'δ_{y}', '', f(R.ch.dmax, 2), 'mm');
+      if (p.d_add) R_('Additional deflection', 'δ_{add}', '', f(p.d_add, 2), 'mm');
+      R_('Deflection limit', 'δ_{lim}', 'min(L / k_{δ}, δ_{lim,abs})', f(R.ch.dlimit, 2), 'mm');
+      C((R.ch.dmax + p.d_add) / R.ch.dlimit, 'Deflection within the limit', 'Deflection exceeds the limit');
+    }
+    const bad = checks.filter(c => state(c.u) === 'ng');
+    H('Summary');
+    N(bad.length ? `${bad.length} of ${checks.length} checks fail: ${bad.map(c => `${c.name} (${f(c.u, 2)})`).join('; ')}.` : `All ${checks.length} checks pass.`);
+    $('tab-sheet').innerHTML = out.join('');
+  }
+
+  function renderSectionEC(p, R) {
+    const rows = [], T = (a, b, c) => rows.push(`<tr><td>${mk(a)}</td><td class="n">${b}</td><td>${mk(c || '')}</td></tr>`);
+    let html = '';
+    if (R.ch) {
+      const sec = R.sec, tp = sec.tp || {}, box = sec.kind === 'box';
+      T('Section', esc(R.mb.name)); T('Source', 'beam-v03 library (SCI P363 section tables; SCI P385 torsion constants)');
+      T('Depth h', f(+sec.D, 1), 'mm'); T('Width b', f(+sec.B, 1), 'mm'); T(box ? 'Wall thickness t' : 'Web t_{w}', f(+sec.tw, 2), 'mm');
+      if (!box) { T('Flange t_{f}', f(+sec.tf, 2), 'mm'); T('Root radius r', f(+sec.r, 1), 'mm'); }
+      T('Mass', f(+sec.mass, 1), 'kg/m'); T('Area A', f(+sec.A, 2), 'cm^2');
+      T('I_{y}', f(+sec.Ix, 0), 'cm^4'); T('I_{z}', f(+sec.Iy, 1), 'cm^4');
+      T('W_{el,y}', f(+sec.Zx, 1), 'cm^3'); T('W_{pl,y}', f(+sec.Sx, 1), 'cm^3'); T('W_{el,z}', f(+sec.Zy, 1), 'cm^3'); T('W_{pl,z}', f(+sec.Sy, 1), 'cm^3');
+      T('Torsion constant I_{T}', f(tp.IT != null ? +tp.IT : +sec.J, 2), 'cm^4');
+      if (tp.Iw != null) T('Warping constant I_{w}', f(+tp.Iw, 4), 'dm^6');
+      if (sec.kind === 'channel') { T('Shear centre from the web centreline e_{0}', f(+tp.e0, 1), 'mm'); T('Shear centre to centroid e_{sc}', f(+tp.esc, 1), 'mm'); }
+      if (tp.Wn0 != null) T('Normalised warping function W_{n0}', f(+tp.Wn0, 1), 'cm^2');
+      if (tp.Sw1 != null) T('Warping statical moment S_{w1}', f(+tp.Sw1, 1), 'cm^4');
+      if (tp.Wt != null) T('Torsion modulus W_{t}', f(+tp.Wt, 1), 'cm^3');
+      T('Yield strength f_{y} (beam-v03)', f(+R.ch.fy, 0), 'N/mm^2');
+      T('Cross-section class (beam-v03)', esc(String(R.ch.clsName || (R.ch.cl && R.ch.cl.cls) || '')));
+      html += `<h3 class="sh-h">Torsion beam</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+      rows.length = 0;
+    }
+    if (p.sb_method === 'Cantilever') {
+      const a = p.angle, long = (p.orientation || 'Long') === 'Long';
+      T('Angle', esc(a.name)); T('Legs D × B × t', `${f(a.D, 0)} × ${f(a.B, 0)} × ${f(a.t, 1)}`, 'mm'); T('Area A', f(a.A / 100, 2), 'cm^2');
+      T('Centroid from the back of the vertical leg', f(long ? a.cx : a.cyy, 1), 'mm'); T('Centroid above the soffit', f(long ? a.cyy : a.cx, 1), 'mm');
+      html += `<h3 class="sh-h">Support angle</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+    } else if (p.sb_method === 'SCI') {
+      T('Legs l_{h} × l_{v} × t', `${f(p.lh, 0)} × ${f(p.lv, 0)} × ${f(p.tsb, 1)}`, 'mm'); T('Inside bend radius r_{1}', f(p.r1sb, 1), 'mm');
+      T('0.2 % proof strength f_{y}', f(R.sup.fy, 0), 'N/mm^2'); T('Tensile strength f_{u}', f(R.sup.fu, 0), 'N/mm^2');
+      html += `<h3 class="sh-h">Stainless angle</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+    } else {
+      T('Plate l_{plate} × t_{sb}', `${f(p.lplate, 0)} × ${f(p.tsb, 1)}`, 'mm'); T('Yield strength f_{y}', f(R.sup.fy, 0), 'N/mm^2');
+      html += `<h3 class="sh-h">Support plate</h3><div class="scroll"><table><tbody>${rows.join('')}</tbody></table></div>`;
+    }
+    $('tab-section').innerHTML = html;
+  }
+
+  function renderNotesEC(p, R) {
+    const N = [], tor = !!R.ch, m = p.sb_method;
+    const add = (id, lvl, title, body) => N.push(`<div class="note ${lvl}"><h4><span class="id">${id}</span>${esc(title)}</h4><p>${body}</p></div>`);
+    add('E1', 'info', 'What changes from the BS 5950 route', 'Loads use EN 1990 Eq 6.10. The beam is checked by beam-v03: EN 1993-1-1 cross-section and lateral-torsional buckling with an FE eigenvalue M<sub>cr</sub> that includes the load heights, and SCI P385 for torsion (cross-section check to P385 3.1.2 and the EN 1993-6 Annex A buckling interaction). The plate, angle, weld and bolt checks keep the SCI P110 / SCI P157 load models of the BS route with EN 1993 resistances.');
+    if (tor) {
+      const tw = twistEC(p, R);
+      add('E2', 'warn', 'Twist limit is a project criterion', `Eurocode 3 sets no twist limit; SCI P385 suggests about 2° as a guideline. This page applies your limit (${p.twist_check === 'Lever' ? f(p.d_h_lim, 1) + ' mm at the lever arm' : f(p.phi_lim, 2) + '°'}); the SLS twist is ${f(tw.phi, 2)}°. For masonry, the drop of the outer leaf bearing usually governs.`);
+      add('E3', 'info', 'Load height', `The inner leaf load is applied at ${st.zg_inner === 'sc' ? 'the shear centre (not destabilising)' : 'the top flange (destabilising)'} and the outer leaf at the support level (stabilising). Change “Inner leaf load acts at” if the wall restrains the top flange.`);
+      if (R.mb.type === 'C') add('E4', 'info', 'Channel self-weight torque included', `beam-v03 applies the channel's self-weight at its centroid, ${f(Math.abs(R.swE), 1)} mm from the shear centre. The BS route leaves this torque out (finding F2).`);
+      const toe = m === 'Plate' ? p.lh : (m === 'Cantilever' ? ((p.orientation || 'Long') === 'Long' ? p.angle.D : p.angle.B) : p.lh) + (p.fixing === 'Bolt' ? p.shim : 0);
+      const lever = toe + R.dsc, drop = R.ch.dmax + p.d_add + tw.phi / DEG * lever + R.sup.delta_toe;
+      add('F4', 'info', 'Total drop of the outer-leaf bearing', `At midspan, toe of the support: δ<sub>y</sub> + φ<sub>sls</sub> × ${f(lever, 0)} mm + δ<sub>toe</sub> = <b>${f(drop, 1)} mm</b>. Compare with what the masonry and its movement joints can accept.`);
+      add('F6', 'warn', 'End connections must carry the torque', `beam-v03 gives T<sub>Ed</sub> = <b>${f(endTorque(R), 2)} kNm</b> at each end (ULS, fork supports). Design the end connections for it.`);
+      add('E5', 'info', 'Stiff bearing at the supports', 'beam-v03 checks the web under the support reactions with a 100 mm stiff bearing length at each end. Change the detail or check it separately if the bearing is shorter.');
+      if (R.mirror) add('M1', 'warn', 'Mirrored channel', 'The toes face the cavity, so the shear centre lies on the inner side and both leaves twist the beam the same way. Keep the toes inward unless there is a strong reason.');
+    }
+    if ((m === 'Plate' || (m === 'Cantilever' && p.fixing === 'Weld top')) && R.sup.weld) add('E6', 'info', 'Weld strength from the weaker part', `f<sub>u</sub> and β<sub>w</sub> come from the weaker part joined (${esc(R.sup.weld.grade)}), as EN 1993-1-8 4.5.3.3 requires. The BS route uses the support grade only (finding F12).`);
+    if (m === 'Plate') {
+      add('E7', 'info', 'Plastic resistance of the plate', 'EN 1993-1-1 takes M<sub>c,Rd</sub> = W<sub>pl</sub> f<sub>y</sub> / γ<sub>M0</sub> for the Class 1 plate strip, 25 % more than the BS 5950 limit of 1.2 p<sub>y</sub> Z. The toe deflection limit still controls the plate stiffness.');
+      if (R.sup.dm < 2 / 3 * p.b_msb && p.sb_load !== 'Slab') add('F13', 'warn', 'Less than 2/3 bearing', `d<sub>m</sub> = ${f(R.sup.dm, 1)} mm is below 2/3 of the leaf width (${f(2 / 3 * p.b_msb, 1)} mm).`);
+    }
+    if (m === 'Cantilever') add('E8', 'info', 'Angle self-weight lever', `The self-weight of the angle acts at its true centroid, ${f((p.orientation || 'Long') === 'Long' ? p.angle.cx : p.angle.cyy, 1)} mm from the back of the vertical leg (the BS route uses c<sub>yy</sub> for either orientation, finding F14).`);
+    if (p.fixing === 'Bolt') add('E9', 'info', 'Bolt bearing added', 'The bearing resistance of the angle leg around each bolt (EN 1993-1-8 Table 3.4) is checked here; the BS route has no bearing check.');
+    if (m === 'SCI') add('E10', 'warn', 'Stainless partial factor', `γ<sub>M0</sub> = ${f(+st.gm0ss, 2)} is used for the stainless angle (EN 1993-1-4 recommends 1.1). Confirm the value in the UK National Annex to BS EN 1993-1-4, and the reduced strength f<sub>u,red</sub> used for bolt bearing.`);
+    add('F11', 'info', 'Loads to confirm', 'Full leaf height with no arching, the leaf densities, and any floor or roof load on the inner leaf (enter it as extra dead or imposed load).');
+    $('tab-notes').innerHTML = `<div class="prose"><p>Eurocode 3 route. Each note shows its effect on the current design; F-numbers refer to the findings on the BS route.</p></div><div class="notes">${N.join('')}</div>`;
+  }
+
+  // ------------------------------------------------------------------ validation against the embedded benchmark runs
+  function refUtils(r, p, o) {
+    const u = {};
+    if (p.sb_method === 'Plate') {
+      u.heel = r.Mx_plate / o.Mc_plate; u.transverse = r.alpha_ts > 0 ? r.alpha_ls / r.alpha_ts : Infinity; u.toe = r.delta_toe / o.delta_lim; u.weld = r.Rweld / r.pc_weld;   // toe limit min(1 + dm/c, 2) mm (live run V1)
+    } else {
+      u.heel = r.sigma_heel / o.pysb;
+      if ('delta_toe' in r) u.toe = r.delta_toe / o.delta_lim;     // not compared where the benchmark overwrites δ (welded angle, construction stage)
+      if (p.fixing === 'Bolt') { u.bolt = Math.max(r.Fs_bolt / r.Ps_bolt, r.Ft_bolt / r.Pt_bolt); u.bolt_comb = r.F_comb / 1.4; }
+      else u.weld = r.P_weld / o.pweld;
+    }
+    if (p.mb) {
+      const py = o.py, hr = p.mb.type === 'HR';
+      u.shear = r.Fv / r.Pv; u.moment = r.Mx / r.Mcx; u.buckling_ib = r.ib;
+      if (hr) { u.local = (r.sig_bx + r.sig_byt) / py; u.shear_stress = r.tau / (0.6 * py); }
+      else { u.LTB = r.Mx * p.mLT / r.Mb; u.local = (r.sig_bx + r.sig_byt + r.sig_w) / py; u.shear_stress = Math.max(r.tau_w, r.tau_f) / (0.6 * py); }
+      if (p.twist_on !== 0) u.twist = p.twist_check === 'Lever' ? r.delta_h_sls / p.d_h_lim : r.phi_sls_deg / p.phi_lim;
+      if (p.defl_on !== 0) u.deflection = r.dy / Math.min(p.L / p.k_delta, p.d_lim_abs);
+    }
+    return u;
+  }
+  function engineUtils(p, o) {
+    const u = Object.assign({}, o.util_sb);
+    delete u.heel_c; delete u.transverse_c; delete u.toe_c;
+    if (o.util) { Object.assign(u, o.util); if (p.mb.type === 'HR') delete u.LTB; }
+    return u;
+  }
+  let VAL = null;
+  function runValidation() {
+    let n = 0, within = 0, worst = 0, worstAt = '', sum = 0, dec = 0, decOk = 0, cls = 0, clsOk = 0;
+    const rows = [];
+    for (const c of DATA.cases) {
+      let o;
+      try { o = SMS.calc(c.p); } catch (e) { rows.push({ c, err: e.message }); continue; }
+      let w = 0, wk = '', cn = 0;
+      for (const [k, ref] of Object.entries(c.refs)) {
+        if (k === 'Class') { cls++; if (String(o.Class).toLowerCase() === String(ref).toLowerCase()) clsOk++; continue; }
+        const e = Math.abs(o[k] - ref) / Math.max(Math.abs(ref), 1e-9);
+        n++; cn++; sum += e; if (e <= 0.02) within++;
+        if (!(e <= w)) { w = e; wk = k; }
+      }
+      if (!(w <= worst)) { worst = w; worstAt = `${c.id} ${wk}`; }
+      const tu = refUtils(c.refs, c.p, o), eu = engineUtils(c.p, o);
+      let cd = 0, cdOk = 0;
+      for (const k of Object.keys(tu)) { cd++; if ((tu[k] <= 1) === (eu[k] <= 1)) cdOk++; }
+      dec += cd; decOk += cdOk;
+      rows.push({ c, o, w, wk, cn, cd, cdOk });
+    }
+    VAL = { rows, n, within, worst, worstAt, mean: n ? 1 - sum / n : 0, dec, decOk, cls, clsOk };
+    const chip = $('vchip'), good = within === n && decOk === dec && rows.every(r => !r.err);
+    chip.classList.toggle('bad', !good);
+    chip.innerHTML = `Verified on <b>${rows.length}</b> benchmark runs · max difference <b>${pct(worst)}</b>`;
+    renderValidation();
+  }
+  function renderValidation() {
+    const V = VAL, gui = V.rows.filter(r => /^[CX]/.test(r.c.id)).length;
+    const desc = r => {
+      const p = r.c.p, sup = p.sb_method === 'Plate' ? `${f(p.tsb, 0)} mm plate` : p.sb_method === 'Cantilever' ? `${p.angle.name} ${p.fixing === 'Bolt' ? 'bolted' : 'welded'}` : `stainless ${p.grade_sb} angle`;
+      return (p.mb ? p.mb.name + ' + ' : '') + sup;
+    };
+    const rows = V.rows.map(r => r.err ? `<tr><td>${r.c.id}</td><td colspan="5">Engine error: ${esc(r.err)}</td></tr>` :
+      `<tr><td>${r.c.id}</td><td>${esc(r.c.src)}</td><td>${esc(desc(r))}${r.c.desc ? `<span class="ref">${esc(r.c.desc)}</span>` : ''}</td>` +
+      `<td class="n">${r.cn}</td><td class="n">${pct(r.w)}<span class="ref">${esc(r.wk)}</span></td><td class="n">${r.cdOk}/${r.cd}</td>` +
+      `<td><button type="button" class="btn" data-load="${r.c.id}">Load</button></td></tr>`).join('');
+    $('tab-validation').innerHTML = `<div class="prose"><p>Every run below was calculated by an established commercial program for this calculation (same BS 5950 method). ${gui} were run in its window and ${V.rows.length - gui} through its calculation interface, with sections, angles and bolts from its data lists. When this page opens, its engine recalculates every run from the same inputs and compares each result.</p></div>` +
+      `<dl class="stats"><div><dt>Benchmark runs</dt><dd>${V.rows.length}</dd></div><div><dt>Values compared</dt><dd>${V.n}</dd></div><div><dt>Within 2 %</dt><dd>${V.within} / ${V.n}</dd></div>` +
+      `<div><dt>Largest difference</dt><dd>${pct(V.worst)}</dd></div><div><dt>Mean accuracy</dt><dd>${(100 * V.mean).toFixed(4)} %</dd></div><div><dt>Pass/fail verdicts agree</dt><dd>${V.decOk} / ${V.dec}</dd></div><div><dt>Section class agrees</dt><dd>${V.clsOk} / ${V.cls}</dd></div></dl>` +
+      `<div class="prose"><p><b>Covered:</b> the six worked examples (X01–X06); eight live verification runs (V1–V8: every support and beam check failing, high shear on I and RHS beams, all five Table 13 rows, an RHS beyond the Table 15 limit, a channel with slabs); welded plate, hot-rolled angle welded or bolted (either leg horizontal), angle only, cold-formed stainless angle; masonry or slab on the support and on the beam; angle soffit offset h<sub>bf</sub>; UKPFC, UKB, UKC, RHS and SHS beams up to UKB 1016; plastic, compact and semi-compact beams and high-shear moment capacity (slender beams stop as “beyond scope”); warping free and fixed; normal and destabilising load; Table 13 factors; angle and lever-arm twist limits, and the twist or deflection check switched off; plate construction stage; grade 4.6 and 8.8 bolts M12–M24; S275 and S355. <b>Not yet benchmarked:</b> HSFG bolts, laterally unrestrained compression flanges, and user-defined sections (their properties come from the dimensions, checked against 141 catalogue sections to 0.04 %). The construction stage with angles is not offered: for a welded angle the benchmark program overwrites its toe deflection with the construction-stage value, so that value is not compared (runs M038 and M039).</p></div>` +
+      `<div class="scroll"><table><thead><tr><th>Run</th><th>Source</th><th>Case</th><th class="n">Values</th><th class="n">Largest diff.</th><th class="n">Verdicts</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` +
+      (DATA.ec3test ? `<div class="prose"><h3>Eurocode 3 mode</h3><p>This mode has no external benchmark. ` +
+        `The beam checks are beam-v03's engine (commit ${esc(DATA.ec3test.commit)}), included unchanged; beam-v03 was benchmarked against commercial beam-design software and checks torsion to SCI P385. ` +
+        `The adapter that turns this page's inputs into beam-v03 loads was checked against beam-v03's own Beam in Wall module on the same wall: identical load positions, load heights and results. ` +
+        `The plate, weld and bolt formulas (EN 1993-1-1, EN 1993-1-8) were checked against hand calculations. Build test output:</p>` +
+        `<pre class="nt" style="white-space:pre-wrap;font-family:var(--font-num);font-size:12px">${esc(DATA.ec3test.lines.join('\n'))}</pre></div>` : '');
+  }
+  $('tab-validation').addEventListener('click', e => {
+    const b = e.target.closest('button[data-load]');
+    if (b) { loadCase(b.dataset.load); selectTab('sheet'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+
+  // ------------------------------------------------------------------ presets, tabs, boot
+  function loadCase(id) {
+    const c = DATA.cases.find(x => x.id === id);
+    if (!c) return;
+    st = pToForm(c.p);
+    if (isEC(st) && +st.gG === 1.4 && +st.gQ === 1.6) { st.gG = 1.35; st.gQ = 1.5; }
+    fixSection();
+    writeForm();
+    update();
+    const sel = $('preset');
+    sel.value = [...sel.options].some(o => o.value === id) ? id : '';
+    tip(sel);
+  }
+  function buildPresets() {
+    const sel = $('preset');
+    const blank = document.createElement('option'); blank.value = ''; blank.textContent = 'Your inputs'; sel.append(blank);
+    for (const [label, pre] of [['Worked examples', 'X'], ['Verification runs', 'V'], ['Benchmark runs', 'C']]) {
+      const og = document.createElement('optgroup'); og.label = label;
+      for (const c of DATA.cases.filter(x => x.id.startsWith(pre))) {
+        const o = document.createElement('option'); o.value = c.id;
+        o.textContent = `${c.id}: ${c.short || c.desc}`; o.title = c.desc; og.append(o);
+      }
+      if (og.children.length) sel.append(og);
+    }
+    sel.addEventListener('change', () => { if (sel.value) loadCase(sel.value); tip(sel); });
+  }
+  const TABS = ['sheet', 'section', 'validation', 'notes'];
+  function selectTab(name) {
+    for (const t of TABS) { $('t-' + t).setAttribute('aria-selected', String(t === name)); $('tab-' + t).hidden = t !== name; }
+  }
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('button[role=tab]'); if (b) selectTab(b.id.slice(2)); });
+  $('tabs').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = TABS.findIndex(t => $('t-' + t).getAttribute('aria-selected') === 'true'), j = (i + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length;
+    selectTab(TABS[j]); $('t-' + TABS[j]).focus();
+  });
+  $('vchip').addEventListener('click', () => { selectTab('validation'); $('tabs').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+  buildForm();
+  buildPresets();
+  const hasC01 = DATA.cases.some(c => c.id === 'C01');
+  if (hasC01) loadCase('C01'); else { writeForm(); update(); }
+  runValidation();
+  const h = (location.hash || '').slice(1), hc = /(?:^|&)case=([A-Za-z0-9]+)/.exec(h), ht = /(?:^|&)tab=([a-z]+)/.exec(h);
+  for (const k of ['project', 'jobref', 'calcby', 'company', 'address', 'section', 'calcdate', 'chkby', 'chkdate', 'appby', 'appdate', 'paper']) {   // optional sheet heading from the link, e.g. #case=X01&company=...
+    const mh = new RegExp('(?:^|&)' + k + '=([^&]*)').exec(h);
+    if (mh) { try { st[k] = decodeURIComponent(mh[1].replace(/\+/g, ' ')); } catch (e) { /* keep the form value */ } }
+  }
+  if (hc) loadCase(hc[1]);                                   // e.g. #case=X01 (used to print the comparison reports)
+  if (TABS.includes(h)) selectTab(h); else if (ht && TABS.includes(ht[1])) selectTab(ht[1]);
+  $('foot').textContent = `Engine sms.js ${SMS.version}. Page built ${DATA.built}. Sections: ${Object.entries(CAT).map(([k, v]) => `${v.length} ${k}`).join(', ')}. ` +
+    'Results are for checking by a competent engineer, who remains responsible for the design.';
+})();
+</script>
